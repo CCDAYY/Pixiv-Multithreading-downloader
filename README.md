@@ -7,3 +7,4 @@ Three Downloade modes available
 * Searching with rank: Use user to enter the way to search.
 * Daily trending mode: Pixiv daily trending rank(automatic creat the folder , will not overlap the pervious day's folder)
 * Normal Search : search what user type in, can chose the page. 
+** require user's cookie
