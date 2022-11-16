@@ -6,20 +6,25 @@ import time
 from tqdm import  tqdm
 import os
 save_path = ""
+
+c_k = input("type y to change cookies->")
+cook = "first_visit_datetime_pc=2021-09-02+23%3A43%3A13; p_ab_id=3; p_ab_id_2=6; p_ab_d_id=1362319497; yuid_b=N0F1eBc; privacy_policy_notification=0; b_type=1; ki_r=; login_ever=yes; ki_s=214908%3A0.0.0.0.2%3B214994%3A0.0.0.0.2%3B215190%3A0.0.0.0.2%3B219376%3A0.0.0.0.2%3B221691%3A0.0.0.0.2; ki_t=1632313976963%3B1640175147711%3B1640175165221%3B5%3B49; c_type=25; a_type=1; privacy_policy_agreement=5; _gcl_au=1.1.1543749531.1664107948; device_token=a9b76dd3d13a3deb263669b9715aadcf; first_visit_datetime=2022-11-03+18%3A26%3A00; PHPSESSID=52047359_GX3stRHI2353liHSwVNL08254B5edAc3; _ga_MZ1NL4PHH0=GS1.1.1667521370.6.0.1667521370.0.0.0; tag_view_ranking=_EOd7bsGyl~lkoWqucyTw~uusOs0ipBx~ziiAzr_h04~jhuUT0OJva~ZNRc-RnkNl~B6uEbiYg7i~CluIvy4vsU~fHzsW6IqUG~RTJMXD26Ak~mkdwargRR2~_hSAdpN9rx~yTWt5hzG4w~P8OX_Lzc1b~qDi7263PSz~dI30gMiyFa~pzZvureUki~q1r4Vd8vYK~CbkyggmWCV~nWC-P2-9TI~ZPjQtvhTg3~UotTWDag3B~mLrrjwTHBm~9Gbahmahac~6293srEnwa~MnGbHeuS94~RgJEiMBANx~_wgwZ79S9p~bv3Hjql-Z1~Ie2c51_4Sp~9dh32MPwDj~Lt-oEicbBr~JL8rvDh62i~JrQgdjRZtN~Bzyu1zjric~EUwzYuPRbU~QliAD3l3jr~w8ffkPoJ_S~K8esoIs2eW~P-Zsw0n2vU~pzzjRSV6ZO~LJo91uBPz4~q3eUobDMJW~bq1HPY2wZ-~pnCQRVigpy~rOnsP2Q5UN~CHzc3gIECp~hZzvvipTPD~TqiZfKmSCg~faZX-CfhYv~yREQ8PVGHN~1s4b4irzBH~QIc0RHSvtN~hW_oUTwHGx~BSlt10mdnm~OUqETMPW2Z~YbOo-qnBCR~aTW6kYb0Ak~IsJjJpzDo3~83nP16VbYh~Thyk9saBEx~0IB1cxSXTq~2V0-EgyHVg~CLEmkBaAcu~BOHDnbK1si~FuSOTTQp_1~PiKFMvIHS1~xF0JX9eOwX~BC84tpS1K_~6ImQE2rhA3~jH0uD88V6F~ETjPkL0e6r~v-OL0-Ncw6~jk9IzfjZ6n~D6xAR9Wod9~KvAGITxIxH~YvAixcnlGi~t1Am7AQCDs~sAwDH104z0~IBgoeiGDSP~CMvJQbTsDH~LRbdzYYhoA~RDY8AkVSDu~oCqKGRNl20~j2lJ8_51Vq~npWJIbJroU~Sgh7s9dZ-K~_AKBg0O8RH~8NU7YH_PAG~59dAqNEUGJ~e9EFq9kkOU~08iLUivxxM~Q4duCCWLbW~0zADS3mWo2~mz8TBIAkOD~OTwy05NHTP~gGjtVdrrFe~NE-E8kJhx6~ZMIwqQI05A~zeOOAJeQjD; QSI_S_ZN_5hF4My7Ad6VNNAi=v:0:0; _gid=GA1.2.759326914.1668594580; __cf_bm=LnXXQnjlxs_eClL7mldyr7_34_xU8d3qude8sSWNUFw-1668595597-0-AZkBIqAxiw9NlWYOyx2e2GXKPrFR5MJqxdvLUGT3wioSvzBHjDohnSOTs6VHQ2lUQRie5ZFamW8HzQE2JaYavFSZSUoHJtej01qfQEf1keDuzAcHKb5CPG5wswRXbR5dmBFPSuv+ixfg1CZcegEYgWOTfqpJSilTme0rUhyEU/wdy/ntCs5rtnEi9JivztazmA==; _ga_75BBYNYN9J=GS1.1.1668594574.46.1.1668595597.0.0.0; _ga=GA1.2.1138408233.1634023850; _gat_UA-1830249-3=1"
+if c_k =="y":
+    cook = input("new cookiee->")
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
     'referer': 'https://www.pixiv.net/',
     # change cookie!
-    'cookie' :'first_visit_datetime_pc=2022-07-06+12%3A31%3A34; yuid_b=Y3l3JyA; p_ab_id=9; p_ab_id_2=7; p_ab_d_id=70900205; c_type=25; privacy_policy_notification=0; a_type=1; b_type=1; login_ever=yes; privacy_policy_agreement=5; _fbp=fb.1.1659843712837.595619200; _gcl_au=1.1.862064737.1667556191; PHPSESSID=52047359_e3gMlROeZGrEuxqHzdsut0PJVhbfcjfM; device_token=c3d4b67bed3141e3982fa9bc29b18943; QSI_S_ZN_5hF4My7Ad6VNNAi=v:0:0; __cf_bm=Burdid_KvyU8YFG33q92u_33gThKu_UoI1.sIdS1l3Y-1668134383-0-Ab63mpah8azxLXJ8QpB5sa76ETjJVMS3oKrHj77XbfWSjtbIqCwsMvPE1P9bz/jzogp6aHj9KyoFm/c+wawQKie0p3lVt3ed5PhB0Y6v5qnvZBRcYDEvx09R6tQ0+/eF2eDMqX5ij/lHCGA0UWkLfwglRfH3JflFYpZIZ3OC1VpEXPjH/9AKvlaUIh+qOJ4gQQ==; _gid=GA1.2.276021848.1668134391; tag_view_ranking=B6uEbiYg7i~CluIvy4vsU~jYh2eZgGpA~_EOd7bsGyl~uusOs0ipBx~RTJMXD26Ak~jhuUT0OJva~fHzsW6IqUG~yRoNh0Qhm9~ziiAzr_h04~9ODMAZ0ebV~Lt-oEicbBr~LJo91uBPz4~AauDVIJZFs~ubfcowqpt0~zbkuXp-SeA~OTwy05NHTP~lkoWqucyTw~VyMzgidqJ2~o7hvUrSGDN~Wxk4MkYNNf~QliAD3l3jr~HKacS-D5BU~MKnVucuYOn~e2yEFDVXjZ~Ie2c51_4Sp~cb-9gnu4GK~MnGbHeuS94~mkdwargRR2~JrQgdjRZtN~LF9kqwfMs-~dI30gMiyFa~qDi7263PSz~1G1bsV2xcg~CMvJQbTsDH~tlXeaI4KBb~mLrrjwTHBm~47Y4K-mkZp~UC88m8Ncjp~R6781hHvcD~LtqwLKiXpU~S6OJ9uijaS~rc-tS2ndS_~hVuZfaQFy1~ACntaietug~xSHgVV_CZp~0zADS3mWo2~mz8TBIAkOD~0HfyRN74pw~-JElyH-DNN~fidt6AhIsl~4Y3V8ANC-b~WM3631l9jF~spPqEvHEF2~lJoTN1o2SZ~1MsYTGMqRa~QTp6AjCbvf~qtVr8SCFs5~jm40SVtdHx~N9g3b-m0G9~VlPGsfUYUq~C8c7zUdH1w~zKLqKSPEAG~1s4b4irzBH~e2syg_rHyV~59dAqNEUGJ~P8OX_Lzc1b~GicHBP_mt1~7TL10-HUQU~nhidBJEVl0~D6xAR9Wod9~9LhLC1Kxwa~az4Twa7Ghs~gOsOYSdg91~Bzyu1zjric~OqRhcPLny7~HOW72W2vi2~T1etFHYy1i~pnCQRVigpy~uW5495Nhg-~d_xJYFN472~eoZbvaNuhK~P8_hhAfbil~2870udwj0N~WbBWp_OUQ1~T9evV3tl5m~mEXH62aTbl~eTX0s8V6Tb~Xxky0ZAyIM~E2xZO-a_vM~gxGILk9xEc~BX9ZK9kJFw~cyc7E50MAG~n3GBuX-EM5~yroC1pdUO-~ZQJ8wXoTHu~xF0JX9eOwX~npWJIbJroU~GfzIxzFqfY~DxQj_Ks20P; _gat_UA-1830249-3=1; _ga_75BBYNYN9J=GS1.1.1668134381.33.1.1668134591.0.0.0; _ga=GA1.1.390407410.1659769130'
+    'cookie' : cook
 }
+
+
 def download(id, count):
     global save_path
     url = 'https://www.pixiv.net/artworks/%d' % id
     res = requests.get(url, headers=headers)
     pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
-    print(pic_url,"download picurl ")
     pic_name = re.findall(r'"illustTitle":"(.+?)"', res.text)[0]
-    print(pic_name, "download pic_name ")
     # 获取后缀
     extension = re.findall(r'....$', pic_url)[0]
     pic_url = re.sub('.....$','',pic_url)
@@ -27,26 +32,31 @@ def download(id, count):
         pic_name = re.sub('[\\\ \/ \* \? \" \: \< \> \|]', '', pic_name)
 
     # 下载图片
-    for i in range(0,int(count)):
-        url = pic_url+str(i)+extension
-        #print('正在下载id为：%d的第%d张图片'%(id,i+1),end='   ')
-        pic = requests.get(url, headers=headers,stream=True)
-        total = int(pic.headers.get('content-length', 0))
-        pic_url = (save_path + '\%s%d%s%s') % (pic_name, i+1,'_'+str(id), extension) # change path
-        with  open(pic_url, 'wb') as f, tqdm(
-                desc=pic_url,
-                total=total,
-                unit='iB',
-                unit_scale=True,
-                unit_divisor=1024,
-                position=0,
-                leave=False
-        ) as bar:
-            for data in pic.iter_content(chunk_size=1024):
-                size = f.write(data)
-                bar.update(size)
-        pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
-        pic_url = re.sub('.....$', '', pic_url)
+    try:
+        for i in range(0,int(count)):
+            url = pic_url+str(i)+extension
+            #print('正在下载id为：%d的第%d张图片'%(id,i+1),end='   ')
+            pic = requests.get(url, headers=headers,stream=True)
+            total = int(pic.headers.get('content-length', 0))
+            pic_url = (save_path + '/%s%d%s%s') % (pic_name, i+1,'_'+str(id), extension) # change path
+            with  open(pic_url, 'wb') as f, tqdm(
+                    desc=pic_url,
+                    total=total,
+                    unit='iB',
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    position=0,
+                    leave=False
+            ) as bar:
+                for data in pic.iter_content(chunk_size=1024):
+                    size = f.write(data)
+                    bar.update(size)
+            pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
+            pic_url = re.sub('.....$', '', pic_url)
+    except:
+        print("connection many close")
+
+
 def trending():
     id = []
     count = []
@@ -91,7 +101,7 @@ def NormalS():
 
     if len(id)==0:
         return False
-    save_path = str(".\ ")[:2] + name
+    save_path = str("./ ")[:2] + name
     if os.path.exists(save_path) == True:
         pass
     else:
@@ -103,7 +113,7 @@ def NormalS():
         else:
             rtes.append(id[i])
     rest = 0
-    for x in tqdm(range(len(rtes)),desc="downloading",unit="pic",position=0):
+    for x in tqdm(range(len(rtes)),desc="Downloading",unit="pic",position=0):
 
         download(int(rtes[x]),1)
         time.sleep(random.randrange(0,3))
@@ -137,7 +147,7 @@ def changer():
     if len(id) == 0:
         return False
     n_Num = sname + str(likes)
-    save_path = str(".\ ")[:2] + n_Num
+    save_path = str("./ ")[:2] + n_Num
 
     if os.path.exists(save_path) == True:
         pass
@@ -195,7 +205,7 @@ def cos(n):
     if n ==2 : #trending
         day = dateutil.utils.today()
         dd = day.strftime('%d') + day.strftime('%b')
-        save_path = str(".\_trending%s") %(dd)
+        save_path = str("./_trending%s") %(dd)
         if os.path.exists(save_path) == True:
             pass
         else:
