@@ -25,36 +25,34 @@ def download(id, count):
     res = requests.get(url, headers=headers)
     pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
     pic_name = re.findall(r'"illustTitle":"(.+?)"', res.text)[0]
-    # 获取后缀
+        # 获取后缀
     extension = re.findall(r'....$', pic_url)[0]
     pic_url = re.sub('.....$','',pic_url)
     if re.search('[\\\ \/ \* \? \" \: \< \> \|]', pic_name) != None:
         pic_name = re.sub('[\\\ \/ \* \? \" \: \< \> \|]', '', pic_name)
 
-    # 下载图片
-    try:
-        for i in range(0,int(count)):
-            url = pic_url+str(i)+extension
-            #print('正在下载id为：%d的第%d张图片'%(id,i+1),end='   ')
-            pic = requests.get(url, headers=headers,stream=True)
-            total = int(pic.headers.get('content-length', 0))
-            pic_url = (save_path + '/%s%d%s%s') % (pic_name, i+1,'_'+str(id), extension) # change path
-            with  open(pic_url, 'wb') as f, tqdm(
-                    desc=pic_url,
-                    total=total,
-                    unit='iB',
-                    unit_scale=True,
-                    unit_divisor=1024,
-                    position=0,
-                    leave=False
-            ) as bar:
-                for data in pic.iter_content(chunk_size=1024):
-                    size = f.write(data)
-                    bar.update(size)
-            pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
-            pic_url = re.sub('.....$', '', pic_url)
-    except:
-        print("connection many close")
+        # 下载图片
+
+    for i in range(0,int(count)):
+        url = pic_url+str(i)+extension
+        print("download id:" + str(id) )
+        pic = requests.get(url, headers=headers,stream=True)
+        total = int(pic.headers.get('content-length', 0))
+        pic_url = (save_path + '/%s%d%s%s') % (pic_name, i+1,'_'+str(id), extension) # change path
+        with  open(pic_url, 'wb') as f, tqdm(
+                desc=pic_url,
+                total=total,
+                unit='iB',
+                unit_scale=True,
+                unit_divisor=1024,
+                position=0,
+                leave=False
+        ) as bar:
+            for data in pic.iter_content(chunk_size=1024):
+                size = f.write(data)
+                bar.update(size)
+        pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
+        pic_url = re.sub('.....$', '', pic_url)
 
 
 def trending():
@@ -76,9 +74,8 @@ def NormalS():
     name= input("what you want to search:\n->")
     page = 1
     url = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(name, name, page)
-    #print(url)
     total = getTotal(url)
-    #print(str(total)+" pages found!")
+    print(str(total)+" pages found!")
     dettt = int(input("type 1 search specific pages, or type 2 search a range pages, type 3 download all pages:"))
 
     if dettt==1:
@@ -87,45 +84,47 @@ def NormalS():
     elif dettt==2:
         star = int(input("start from which pages?:"))
         end = int(input("start from which pages?:"))
-
         id = M_Pid_search(star,end,2,name)
     elif dettt==3:
         for x in range(total):
+            print("getting ids pls wait")
             k = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(name, name, x+1)
-            print(k)
             res = requests.get(k, headers=headers)
+            print(k)
             id = id + re.findall(r'"id":"(.+?)"', res.text)
-            time.sleep(random.randrange(0, 5))
+            time.sleep(random.randrange(2, 5))
     else:
         return False
 
     if len(id)==0:
         return False
+    new = []
+    for x in range(len(id)):
+        if len(id[x]) > 9:
+            pass
+        else:
+             new.append(id[x])
+    id = new
+    ## create file
     save_path = str("./ ")[:2] + name
     if os.path.exists(save_path) == True:
         pass
     else:
         os.mkdir(save_path)
-    rtes = []
-    for i in range(len(id)):
-        if len(id[i]) > 9:
-          pass
-        else:
-            rtes.append(id[i])
-    rest = 0
-    for x in tqdm(range(len(rtes)),desc="Downloading",unit="pic",position=0):
 
-        download(int(rtes[x]),1)
-        time.sleep(random.randrange(0,3))
-        rest+=1
-        if(rest>50):
-            print("rest for 10 second")
-            time.sleep(10)
-            rest = 0
+    for x in tqdm(range(len(id)),desc="Downloading",unit="pic",position=0,leave=False):
+        try:
+            download(int(id[x]),1)
+            time.sleep(random.randrange(0,3))
+        except:
+            print("fail download id :"+id[x])
+            download(int(id[x]), 1)
 
-    #getids(name,page+1)
-#name =搜索的关键词
-#page = 第几页
+
+
+
+
+
 def changer():
     global save_path
     #total = 0
@@ -162,11 +161,11 @@ def changer():
     print(len(id),"pictures")
     for x in tqdm(range(len(rtes)),desc="downloading",unit="pic",position=0):
         download(int(rtes[x]), 1)
-        time.sleep(0.01)
+        time.sleep(random.randrange(0,3))
 def getTotal(url):
     res= requests.get(url,headers=headers)
     total = re.findall(r'"total":(.+?),', res.text)
-    print(total,"gettotal")
+    print(total,"images found")
     page = 1
     ct= int(total[0])
     if ct > 60:
@@ -176,6 +175,7 @@ def getTotal(url):
         return 1
 def M_Pid_search(num,end,mode,name):
     id =[]
+    print("getting ids pls wait for a while")
     if mode ==1:
         for x in range(num):
             k = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(name, name, x+1)
@@ -187,7 +187,7 @@ def M_Pid_search(num,end,mode,name):
     elif mode==2:
         for x in range(num,end+1):
             k = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(name, name, x+1)
-            print(k)
+            #print(k)
             res = requests.get(k, headers=headers)
             id = id + re.findall(r'"id":"(.+?)"', res.text)
             time.sleep(random.randrange(0, 5))
