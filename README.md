@@ -7,4 +7,3 @@ Three Downloade modes available
 * Searching with rank: Search tags with ranking
 * Daily trending mode: Pixiv daily trending rank(automatic creat the folder , will not overlap the pervious day's folder)
 * Normal Search : Download all picture followed by user input. (serval modes)
-*
