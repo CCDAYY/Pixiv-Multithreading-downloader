@@ -65,8 +65,13 @@ def trending():
         count = count + re.findall('"illust_page_count":"(\d+)"', res.text)
     if len(id) == len(count):
         for i in tqdm(range(0, len(id)),desc="downloading",unit="pic",position=0):
-            download(int(id[i]), int(count[i]))
-            time.sleep(0.01)
+
+            try:
+                download(int(id[i]), int(count[i]))
+            except:
+                time.sleep(0.01)
+                download(int(id[i]), int(count[i]))
+
 
 def NormalS():
     global save_path
@@ -112,18 +117,7 @@ def NormalS():
     else:
         os.mkdir(save_path)
 
-    for x in tqdm(range(len(id)),desc="Downloading",unit="pic",position=0,leave=False):
-        try:
-            download(int(id[x]),1)
-            time.sleep(random.randrange(0,3))
-        except:
-            print("fail download id :"+id[x])
-            download(int(id[x]), 1)
-
-
-
-
-
+    iddownloader(id)
 
 def changer():
     global save_path
@@ -134,34 +128,62 @@ def changer():
     rtes = []
     likes = str(likes)+"users"
     page = 1
-    url = 'https://www.pixiv.net/ajax/search/artworks/{}%20{}%E5%85%A5%E3%82%8A?word={}%20{}%E5%85%A5%E3%82%8A&order=date_d&mode=all&p={}&s_mode=s_tag&type=all&lang=zh'.format(sname,likes,sname,likes,page)
-    total = getTotal(url)
-    for x in range(total):
-        k = 'https://www.pixiv.net/ajax/search/artworks/{}%20{}%E5%85%A5%E3%82%8A?word={}%20{}%E5%85%A5%E3%82%8A&order=date_d&mode=all&p={}&s_mode=s_tag&type=all&lang=zh'.format(
-            sname, likes, sname, likes, x + 1)
-        res = requests.get(k, headers=headers)
-        id = id + re.findall(r'"id":"(.+?)"', res.text)
 
-
-    if len(id) == 0:
-        return False
     n_Num = sname + str(likes)
     save_path = str("./ ")[:2] + n_Num
-
     if os.path.exists(save_path) == True:
         pass
     else:
         os.mkdir(save_path)
 
+    url = 'https://www.pixiv.net/ajax/search/artworks/{}%20{}%E5%85%A5%E3%82%8A?word={}%20{}%E5%85%A5%E3%82%8A&order=date_d&mode=all&p={}&s_mode=s_tag&type=all&lang=zh'.format(sname,likes,sname,likes,page)
+    total = getTotal(url)
+    print(str(total)+" pages found!")
+    a = input("press y to start download")
+    if a == "y":
+        for i in range(total):
+            id = getpageids(sname,likes,1)
+            if len(id) == 0:
+                return False
+            else:
+                iddownloader(id)
+    else:
+        pass
+def iddownloader(id):
+    isDown = []
     for i in range(len(id)):
-        if len(id[i]) > 9:
+        isDown.append(True)
+
+    for x in tqdm(range(len(id)),desc="Downloading",unit="pic",position=0,leave=False):
+        try:
+            randomid = random.randrange(0,len(id))
+            if isDown[randomid] :
+                download(int(id[randomid]),1)
+                isDown[randomid]= False
+            time.sleep(random.randrange(0,3))
+        except:
+            print("fail download id :"+id[x])
+            time.sleep(10)
+            download(int(id[x]), 1)
+
+def getpageids(sname,likes,total):
+    id = []
+    new = []
+    for x in range(total):
+        k = 'https://www.pixiv.net/ajax/search/artworks/{}%20{}%E5%85%A5%E3%82%8A?word={}%20{}%E5%85%A5%E3%82%8A&order=date_d&mode=all&p={}&s_mode=s_tag&type=all&lang=zh'.format(sname, likes, sname, likes, x + 1)
+        res = requests.get(k, headers=headers)
+        id = id + re.findall(r'"id":"(.+?)"', res.text)
+        time.sleep(3)
+    for x in range(len(id)):
+        if len(id[x]) > 9:
             pass
         else:
-            rtes.append(id[i])
-    print(len(id),"pictures")
-    for x in tqdm(range(len(rtes)),desc="downloading",unit="pic",position=0):
-        download(int(rtes[x]), 1)
-        time.sleep(random.randrange(0,3))
+            new.append(id[x])
+    id = new
+
+    return id
+
+
 def getTotal(url):
     res= requests.get(url,headers=headers)
     total = re.findall(r'"total":(.+?),', res.text)
@@ -220,5 +242,3 @@ def cos(n):
             print("no pictures found")
 #download(101821127,3)
 cos(int(input("1:(searching with rank ) 2:(daily trending mode), 3:(normal searching)\n->")))
-
-
