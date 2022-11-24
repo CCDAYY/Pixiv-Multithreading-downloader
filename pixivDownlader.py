@@ -154,8 +154,8 @@ def changer():
     if a == "y":
 
         for i in range(page):
-            print("download page: "+str(i))
-            id = getpageids(sname,likes,1,i)
+            print("download page: "+str(i+1))
+            id = getpageids(sname,likes,1,i+1)
             print(id)
             if len(id) == 0:
                 return False
@@ -173,14 +173,15 @@ def iddownloader(id):
 
     for x in tqdm(range(len(id)),desc="Downloading",unit="pic",position=0,leave=False):
         try:
-            randomid = random.randrange(0,len(id))
+            randomid = random.randint(0,len(id)-1)
             while not isDown[randomid]:
-                randomid = random.randrange(0,len(id))
-            download(int(id[x]),1)
+                randomid = random.randint(0,len(id)-1)
+            download(int(id[randomid]),1)
+            isDown[randomid] = False
         except:
             print("fail download id :"+id[x])
             time.sleep(10)
-            download(int(id[x]), 1)
+            download(int(id[randomid]), 1)
         time.sleep(random.randrange(0, 3))
 def getpageids(sname,likes,total,page):
     id = []
@@ -210,6 +211,7 @@ def cleanArray(arr): # 9 digets
     arr = new
     return arr
 def getTotalPage(url):
+
     res= requests.get(url,headers=headers)
     total = re.findall(r'"total":(.+?),', res.text)
     print(total,"images found")
@@ -263,7 +265,7 @@ def cos(n):
         else:
             print("no pictures found")
 #download(33165101,1)
-#cos(int(input("1:(searching with rank ) 2:(daily trending mode), 3:(normal searching)\n->")))
+cos(int(input("1:(searching with rank ) 2:(daily trending mode), 3:(normal searching)\n->")))
 #NormalS()
 #id = getpageids("scaramouche","1000",1,1)
 
