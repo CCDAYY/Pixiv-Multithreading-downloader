@@ -34,12 +34,12 @@ jobs:
           pip install requests pyinstaller retrying python-dateutil tqdm
       - name: Pack the py file to exe file
         run: |
-          pyinstaller -F ./pixivDownlader.py
+          pyinstaller -F ./pixivDownloader.py
           cd ./dist
           ls
           pwd
           
       - uses: actions/upload-artifact@v3
         with:
-          name: pixivDownlader-linux
+          name: pixivDownloader-linux
           path: /home/runner/work/Pixiv-Picture-Downloader/Pixiv-Picture-Downloader/dist/pixivDownloader
