@@ -35,10 +35,10 @@ jobs:
           C:\ProgramData\scoop\apps\python\current\python.exe -m pip install --upgrade pip
           pip3 install requests pyinstaller retrying python-dateutil tqdm
           echo Pack_the_file
-          pyinstaller -F ./pixivDownlader.py
+          pyinstaller -F ./pixivDownloader.py
           winfetch
           
       - uses: actions/upload-artifact@v3
         with:
-          name: pixivDownlader-win
+          name: pixivDownloader-win
           path: D:\a\Pixiv-Picture-Downloader\Pixiv-Picture-Downloader\dist\pixivDownloader.exe
