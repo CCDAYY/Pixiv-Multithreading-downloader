@@ -2,17 +2,19 @@ import os
 import random
 import re
 import time
-
+from threading import  Thread
 import dateutil.utils
 import requests
 from tqdm import tqdm
 
 save_path = ""
-
 # c_k = input("type y to change cookies->")
 cook = "first_visit_datetime_pc=2021-09-02+23%3A43%3A13; p_ab_id=3; p_ab_id_2=6; p_ab_d_id=1362319497; yuid_b=N0F1eBc; privacy_policy_notification=0; b_type=1; ki_r=; login_ever=yes; ki_s=214908%3A0.0.0.0.2%3B214994%3A0.0.0.0.2%3B215190%3A0.0.0.0.2%3B219376%3A0.0.0.0.2%3B221691%3A0.0.0.0.2; ki_t=1632313976963%3B1640175147711%3B1640175165221%3B5%3B49; c_type=25; a_type=1; privacy_policy_agreement=5; _gcl_au=1.1.1543749531.1664107948; device_token=a9b76dd3d13a3deb263669b9715aadcf; first_visit_datetime=2022-11-03+18%3A26%3A00; PHPSESSID=52047359_GX3stRHI2353liHSwVNL08254B5edAc3; _ga_MZ1NL4PHH0=GS1.1.1667521370.6.0.1667521370.0.0.0; tag_view_ranking=_EOd7bsGyl~lkoWqucyTw~uusOs0ipBx~ziiAzr_h04~jhuUT0OJva~ZNRc-RnkNl~B6uEbiYg7i~CluIvy4vsU~fHzsW6IqUG~RTJMXD26Ak~mkdwargRR2~_hSAdpN9rx~yTWt5hzG4w~P8OX_Lzc1b~qDi7263PSz~dI30gMiyFa~pzZvureUki~q1r4Vd8vYK~CbkyggmWCV~nWC-P2-9TI~ZPjQtvhTg3~UotTWDag3B~mLrrjwTHBm~9Gbahmahac~6293srEnwa~MnGbHeuS94~RgJEiMBANx~_wgwZ79S9p~bv3Hjql-Z1~Ie2c51_4Sp~9dh32MPwDj~Lt-oEicbBr~JL8rvDh62i~JrQgdjRZtN~Bzyu1zjric~EUwzYuPRbU~QliAD3l3jr~w8ffkPoJ_S~K8esoIs2eW~P-Zsw0n2vU~pzzjRSV6ZO~LJo91uBPz4~q3eUobDMJW~bq1HPY2wZ-~pnCQRVigpy~rOnsP2Q5UN~CHzc3gIECp~hZzvvipTPD~TqiZfKmSCg~faZX-CfhYv~yREQ8PVGHN~1s4b4irzBH~QIc0RHSvtN~hW_oUTwHGx~BSlt10mdnm~OUqETMPW2Z~YbOo-qnBCR~aTW6kYb0Ak~IsJjJpzDo3~83nP16VbYh~Thyk9saBEx~0IB1cxSXTq~2V0-EgyHVg~CLEmkBaAcu~BOHDnbK1si~FuSOTTQp_1~PiKFMvIHS1~xF0JX9eOwX~BC84tpS1K_~6ImQE2rhA3~jH0uD88V6F~ETjPkL0e6r~v-OL0-Ncw6~jk9IzfjZ6n~D6xAR9Wod9~KvAGITxIxH~YvAixcnlGi~t1Am7AQCDs~sAwDH104z0~IBgoeiGDSP~CMvJQbTsDH~LRbdzYYhoA~RDY8AkVSDu~oCqKGRNl20~j2lJ8_51Vq~npWJIbJroU~Sgh7s9dZ-K~_AKBg0O8RH~8NU7YH_PAG~59dAqNEUGJ~e9EFq9kkOU~08iLUivxxM~Q4duCCWLbW~0zADS3mWo2~mz8TBIAkOD~OTwy05NHTP~gGjtVdrrFe~NE-E8kJhx6~ZMIwqQI05A~zeOOAJeQjD; QSI_S_ZN_5hF4My7Ad6VNNAi=v:0:0; _gid=GA1.2.759326914.1668594580; __cf_bm=LnXXQnjlxs_eClL7mldyr7_34_xU8d3qude8sSWNUFw-1668595597-0-AZkBIqAxiw9NlWYOyx2e2GXKPrFR5MJqxdvLUGT3wioSvzBHjDohnSOTs6VHQ2lUQRie5ZFamW8HzQE2JaYavFSZSUoHJtej01qfQEf1keDuzAcHKb5CPG5wswRXbR5dmBFPSuv+ixfg1CZcegEYgWOTfqpJSilTme0rUhyEU/wdy/ntCs5rtnEi9JivztazmA==; _ga_75BBYNYN9J=GS1.1.1668594574.46.1.1668595597.0.0.0; _ga=GA1.2.1138408233.1634023850; _gat_UA-1830249-3=1"
 # if c_k =="y":
 # cook = input("new cookiee->")
+is_use_proxy = input("type y use proxy for downloading: ")
+if not is_use_proxy =="y":
+    is_use_proxy= None
 headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
     'referer': 'https://www.pixiv.net/',
@@ -21,8 +23,12 @@ headers = {
 }
 
 
+
+
+
 def download(id, count):
     global save_path
+    global is_use_proxy
     url = 'https://www.pixiv.net/artworks/%d' % id
     res = requests.get(url, headers=headers)
     pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
@@ -43,7 +49,12 @@ def download(id, count):
     for i in range(0, int(count)):
         url = pic_url + str(i) + extension
         print("download id:" + str(id))
-        pic = requests.get(url, headers=headers, stream=True)
+
+        if is_use_proxy ==None:
+            prox = None
+        else:
+            prox = {"https": "https" + "://" + getRandomIp()}
+        pic = requests.get(url, headers=headers, stream=True,proxies=prox)
         total = int(pic.headers.get('content-length', 0))
         pic_url = (save_path + '/%s%d%s%s') % (pic_name, i + 1, '_' + str(id), extension)  # change path
         with  open(pic_url, 'wb') as f, tqdm(
@@ -53,7 +64,7 @@ def download(id, count):
                 unit_scale=True,
                 unit_divisor=1024,
                 position=0,
-                leave=False
+                leave=True
         ) as bar:
             for data in pic.iter_content(chunk_size=1024):
                 size = f.write(data)
@@ -116,6 +127,7 @@ def NormalS():
         pass
     else:
         os.mkdir(save_path)
+    thd = int(input("use how many thread to download ?: "))
     i = 1
     while i <= total:
         if mode == 1:
@@ -123,7 +135,14 @@ def NormalS():
                 id = getpageids(name, None, 1, i)
                 if len(id) == 0:
                     i = total + 1
-                iddownloader(id)
+                k =1
+                div =len(id)//thd
+                while k <=thd:
+                    arr = id[div * (k - 1):div * (k)]
+                    t = Thread(target=iddownloader,args=(arr,))
+                    t.start()
+                    time.sleep(1)
+                    k += 1
             if i > tpage:
                 i = total + 1
         elif mode == 2:
@@ -186,8 +205,9 @@ def iddownloader(id):
             randomid = random.randint(0, len(id) - 1)
             while not isDown[randomid]:
                 randomid = random.randint(0, len(id) - 1)
-            download(int(id[randomid]), 1)
             isDown[randomid] = False
+            download(int(id[randomid]), 1)
+
         except:
             print("fail download id :" + id[x])
             time.sleep(10)
@@ -286,8 +306,42 @@ def cos(n):
         else:
             print("no pictures found")
 
+def ip_proxy():
+    global pro
+
+    ipproxies = []
+    ipproxies_Good=[]
+    a = open("proxy.txt", "r", encoding="utf-8")
+    text = a.read()
+    ip_pool = re.findall(r'"ip":"(.+?)"', text)
+    prot_pool = re.findall(r'"port":"(.+?)"', text)
+
+    for i in range(len(ip_pool)):
+        ipproxies.append("{}:{}".format(ip_pool[i], prot_pool[i]))
+    for i in range(len(ip_pool)):
+        try:
+            res = requests.get(url="https://www.baidu.com/", headers=headers,proxies={"http": "http" + "://" + ipproxies[i]},timeout=1)
+            if res.status_code==200:
+                print(ipproxies[i],"可用")
+                ipproxies_Good.append(ipproxies[i])
+
+        except:
+            print(ipproxies[i], "不可用")
+    print(ipproxies_Good)
+    return ipproxies_Good
+def getRandomIp():
+    proxy = ip_proxy()
+    return random.choice(proxy)
+def down_newProxy():
+    res = requests.get("https://proxylist.geonode.com/api/proxy-list?limit=500&page=1&sort_by=lastChecked&sort_type=desc&protocols=https")
+    f= open("proxy.txt","w",encoding="utf-8")
+    f.write(res.text)
+    f.close()
 
 # download(33165101,1)
+
 cos(int(input("1:(searching with rank ) 2:(daily trending mode), 3:(normal searching)\n->")))
 # NormalS()
 # id = getpageids("scaramouche","1000",1,1)
+#down_newProxy()
+#ip_proxy()
