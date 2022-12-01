@@ -1,5 +1,5 @@
 # Pixiv-Picture-Downloader
-Three Downloade modes available
+Three Download modes available
 
 
 ![image](https://user-images.githubusercontent.com/70998992/199743393-9ae1f2b5-f953-4133-9224-55cbfd5f3884.png)
