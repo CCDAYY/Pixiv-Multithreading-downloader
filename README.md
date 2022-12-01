@@ -10,7 +10,7 @@ Three Downloade modes available
 
 ### 🔧 Installation
 
-Download the executable binary file from [release](https://github.com/CCDAYY/Pixiv-Picture-Downloader/releases/latest) or [pre=release](https://github.com/CCDAYY/Pixiv-Picture-Downloader/releases/dev) (NOT STABLE !)
+Download the executable binary file from [release](https://github.com/CCDAYY/Pixiv-Picture-Downloader/releases/latest) or [pre-release](https://github.com/CCDAYY/Pixiv-Picture-Downloader/releases/dev) (NOT STABLE !)
 
 ### 🔧 Build
 
