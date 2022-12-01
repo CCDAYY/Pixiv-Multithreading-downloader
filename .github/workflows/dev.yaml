@@ -33,7 +33,8 @@ jobs:
           echo Install_requirements
           scoop install python zip upx winfetch -g
           C:\ProgramData\scoop\apps\python\current\python.exe -m pip install --upgrade pip
-          pip3 install requests pyinstaller retrying python-dateutil tqdm
+          pip install -r ./requirements.txt
+          pip install pyinstaller
           echo Pack_the_file
           pyinstaller -F ./pixivDownloader.py
           winfetch
@@ -42,3 +43,12 @@ jobs:
         with:
           name: pixivDownloader-win
           path: D:\a\Pixiv-Picture-Downloader\Pixiv-Picture-Downloader\dist\pixivDownloader.exe
+          
+      - name: Upload Alpha
+        uses: softprops/action-gh-release@v1
+        if: ${{ env.GIT_BRANCH != 'main' && success() }}
+        with:
+          tag: ${{ github.ref }}
+          tag_name: dev
+          files: dist/*
+          prerelease: true

@@ -33,7 +33,8 @@ jobs:
           echo Install_requirements
           scoop install python zip upx winfetch -g
           C:\ProgramData\scoop\apps\python\current\python.exe -m pip install --upgrade pip
-          pip3 install requests pyinstaller retrying python-dateutil tqdm
+          pip install -r requirements.txt
+          pip install pyinstaller
           echo Pack_the_file
           pyinstaller -F ./pixivDownloader.py
           winfetch
