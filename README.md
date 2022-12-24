@@ -3,10 +3,12 @@ Three Download modes available
 
 
 ![image](https://user-images.githubusercontent.com/70998992/209436827-ec02c14e-5b19-46a0-b596-19d2bb413af4.png)
+![image](https://user-images.githubusercontent.com/70998992/209436895-a1f09a0e-185c-4b17-b73d-b6d7879c45ee.png)
 
 * Searching with rank: Search tags with ranking
 * Daily trending mode: Pixiv daily trending rank(automatic creat the folder , will not overlap the pervious day's folder)
 * Normal Search : Download all picture followed by user input. (serval modes)
+* 
 
 ### 🔧 Installation
 
