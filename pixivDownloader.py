@@ -1,4 +1,5 @@
 import os
+import os.path
 import random
 import re
 import time
@@ -7,8 +8,11 @@ import dateutil.utils
 import requests
 from tqdm import tqdm
 import ast
+import hashlib
 import threading
-
+from datetime import datetime
+import shutil
+from rich import print
 from rich.progress import (
     BarColumn,
     DownloadColumn,
@@ -19,29 +23,22 @@ from rich.progress import (
     TimeRemainingColumn,
     TransferSpeedColumn,
     TextColumn,
-    MofNCompleteColumn  
+    MofNCompleteColumn
 )
 
-progress_d = Progress(
-    TextColumn("[progress.description]{task.description}"),
-    TaskProgressColumn(),
-    BarColumn(),
-    DownloadColumn(),
-    TransferSpeedColumn(),
-)
 progress = Progress(
     TextColumn("[progress.description]{task.description}"),
     BarColumn(),
     TaskProgressColumn(),
     TimeElapsedColumn(),
     MofNCompleteColumn(),
-    #TransferSpeedColumn(),
-    # 2transient=True
-)
+    # TransferSpeedColumn(),
+    transient=True
 
-save_path = ""
+)
+save_path = "./"
 # c_k = input("type y to change cookies->")
-cook = "first_visit_datetime_pc=2021-09-02+23%3A43%3A13; p_ab_id=3; p_ab_id_2=6; p_ab_d_id=1362319497; yuid_b=N0F1eBc; privacy_policy_notification=0; b_type=1; ki_r=; login_ever=yes; ki_s=214908%3A0.0.0.0.2%3B214994%3A0.0.0.0.2%3B215190%3A0.0.0.0.2%3B219376%3A0.0.0.0.2%3B221691%3A0.0.0.0.2; ki_t=1632313976963%3B1640175147711%3B1640175165221%3B5%3B49; c_type=25; a_type=1; privacy_policy_agreement=5; _gcl_au=1.1.1543749531.1664107948; device_token=a9b76dd3d13a3deb263669b9715aadcf; first_visit_datetime=2022-11-03+18%3A26%3A00; PHPSESSID=52047359_GX3stRHI2353liHSwVNL08254B5edAc3; _ga_MZ1NL4PHH0=GS1.1.1667521370.6.0.1667521370.0.0.0; tag_view_ranking=_EOd7bsGyl~lkoWqucyTw~uusOs0ipBx~ziiAzr_h04~jhuUT0OJva~ZNRc-RnkNl~B6uEbiYg7i~CluIvy4vsU~fHzsW6IqUG~RTJMXD26Ak~mkdwargRR2~_hSAdpN9rx~yTWt5hzG4w~P8OX_Lzc1b~qDi7263PSz~dI30gMiyFa~pzZvureUki~q1r4Vd8vYK~CbkyggmWCV~nWC-P2-9TI~ZPjQtvhTg3~UotTWDag3B~mLrrjwTHBm~9Gbahmahac~6293srEnwa~MnGbHeuS94~RgJEiMBANx~_wgwZ79S9p~bv3Hjql-Z1~Ie2c51_4Sp~9dh32MPwDj~Lt-oEicbBr~JL8rvDh62i~JrQgdjRZtN~Bzyu1zjric~EUwzYuPRbU~QliAD3l3jr~w8ffkPoJ_S~K8esoIs2eW~P-Zsw0n2vU~pzzjRSV6ZO~LJo91uBPz4~q3eUobDMJW~bq1HPY2wZ-~pnCQRVigpy~rOnsP2Q5UN~CHzc3gIECp~hZzvvipTPD~TqiZfKmSCg~faZX-CfhYv~yREQ8PVGHN~1s4b4irzBH~QIc0RHSvtN~hW_oUTwHGx~BSlt10mdnm~OUqETMPW2Z~YbOo-qnBCR~aTW6kYb0Ak~IsJjJpzDo3~83nP16VbYh~Thyk9saBEx~0IB1cxSXTq~2V0-EgyHVg~CLEmkBaAcu~BOHDnbK1si~FuSOTTQp_1~PiKFMvIHS1~xF0JX9eOwX~BC84tpS1K_~6ImQE2rhA3~jH0uD88V6F~ETjPkL0e6r~v-OL0-Ncw6~jk9IzfjZ6n~D6xAR9Wod9~KvAGITxIxH~YvAixcnlGi~t1Am7AQCDs~sAwDH104z0~IBgoeiGDSP~CMvJQbTsDH~LRbdzYYhoA~RDY8AkVSDu~oCqKGRNl20~j2lJ8_51Vq~npWJIbJroU~Sgh7s9dZ-K~_AKBg0O8RH~8NU7YH_PAG~59dAqNEUGJ~e9EFq9kkOU~08iLUivxxM~Q4duCCWLbW~0zADS3mWo2~mz8TBIAkOD~OTwy05NHTP~gGjtVdrrFe~NE-E8kJhx6~ZMIwqQI05A~zeOOAJeQjD; QSI_S_ZN_5hF4My7Ad6VNNAi=v:0:0; _gid=GA1.2.759326914.1668594580; __cf_bm=LnXXQnjlxs_eClL7mldyr7_34_xU8d3qude8sSWNUFw-1668595597-0-AZkBIqAxiw9NlWYOyx2e2GXKPrFR5MJqxdvLUGT3wioSvzBHjDohnSOTs6VHQ2lUQRie5ZFamW8HzQE2JaYavFSZSUoHJtej01qfQEf1keDuzAcHKb5CPG5wswRXbR5dmBFPSuv+ixfg1CZcegEYgWOTfqpJSilTme0rUhyEU/wdy/ntCs5rtnEi9JivztazmA==; _ga_75BBYNYN9J=GS1.1.1668594574.46.1.1668595597.0.0.0; _ga=GA1.2.1138408233.1634023850; _gat_UA-1830249-3=1"
+cook = "first_visit_datetime_pc=2021-09-02+23%3A43%3A13; p_ab_id=3; p_ab_id_2=6; p_ab_d_id=1362319497; yuid_b=N0F1eBc; privacy_policy_notification=0; b_type=1; ki_r=; login_ever=yes; ki_s=214908%3A0.0.0.0.2%3B214994%3A0.0.0.0.2%3B215190%3A0.0.0.0.2%3B219376%3A0.0.0.0.2%3B221691%3A0.0.0.0.2; ki_t=1632313976963%3B1640175147711%3B1640175165221%3B5%3B49; c_type=25; a_type=1; privacy_policy_agreement=5; _gcl_au=1.1.1543749531.1664107948; first_visit_datetime=2022-11-03+18%3A26%3A00; _ga_MZ1NL4PHH0=GS1.1.1667521370.6.0.1667521370.0.0.0; tag_view_ranking=_EOd7bsGyl~uusOs0ipBx~jhuUT0OJva~lkoWqucyTw~ziiAzr_h04~RTJMXD26Ak~B6uEbiYg7i~fHzsW6IqUG~CluIvy4vsU~ZNRc-RnkNl~mkdwargRR2~dI30gMiyFa~qDi7263PSz~_hSAdpN9rx~P8OX_Lzc1b~pzZvureUki~mLrrjwTHBm~yTWt5hzG4w~q1r4Vd8vYK~Lt-oEicbBr~CbkyggmWCV~9Gbahmahac~6293srEnwa~UotTWDag3B~Bzyu1zjric~QliAD3l3jr~MnGbHeuS94~RgJEiMBANx~ZPjQtvhTg3~_wgwZ79S9p~bv3Hjql-Z1~nWC-P2-9TI~Ie2c51_4Sp~LJo91uBPz4~JL8rvDh62i~JrQgdjRZtN~9dh32MPwDj~EUwzYuPRbU~w8ffkPoJ_S~K8esoIs2eW~aTW6kYb0Ak~IsJjJpzDo3~83nP16VbYh~Thyk9saBEx~0IB1cxSXTq~jH0uD88V6F~9ODMAZ0ebV~nQRrj5c6w_~gGjtVdrrFe~BSlt10mdnm~P-Zsw0n2vU~pzzjRSV6ZO~bq1HPY2wZ-~pnCQRVigpy~rOnsP2Q5UN~CHzc3gIECp~D6xAR9Wod9~cb-9gnu4GK~pa4LoD4xuT~tlI9YiBhjp~RybylJRnhJ~2pZ4K1syEF~TqiZfKmSCg~faZX-CfhYv~yREQ8PVGHN~1s4b4irzBH~QIc0RHSvtN~hW_oUTwHGx~OUqETMPW2Z~YbOo-qnBCR~2V0-EgyHVg~CLEmkBaAcu~BOHDnbK1si~FuSOTTQp_1~PiKFMvIHS1~OqRhcPLny7~MmeCZpWKlw~sq89u71dz_~9lkAIZCWYJ~WcKJlmc3yI~LpjxMAWKke~t2ErccCFR9~NXxDJr1D_u~Wxk4MkYNNf~zx-g5-W1ik~lD5tMyRpMY~T9RlZXWwcd~tfLhZBEOFy~wKl4cqK7Gl~zKLqKSPEAG~w6DOLSTOSN~o7hvUrSGDN~jy1Ljjlbd1~xF0JX9eOwX~BC84tpS1K_~6ImQE2rhA3~ETjPkL0e6r~v-OL0-Ncw6~jk9IzfjZ6n~KvAGITxIxH; QSI_S_ZN_5hF4My7Ad6VNNAi=v:0:0; _gid=GA1.2.1088489866.1669880446; __cf_bm=0aX0teIJy1x7dHT52js_p1kzOBP39peCRN2vJUitwHI-1669942388-0-AfexysZqwif0DHcChJtMX/VPvzq8z+thC+YnHqZ5aRvkTXsmOlVYhuJ8MF+45xNhT95ISflNJEGX8NGzxNElrT5Q3KoSRfMitw++orunvJvrjJ9MO40Z/IZ2fFGLJtrQIxrWOgBsfjNBXFPJcsJZqE3v0guRVDl8LE/zyMiKE3YieV5m1oyH58yUurS+fjdE+f0G15jdd95nCuSzvYM5/BU=; PHPSESSID=52047359_IOPTVFnqi9jltYj8tSaKOugFZ0q36LkB; device_token=984aa28b59e17511e41f4fe4f864e95e; _ga=GA1.2.1138408233.1634023850; _ga_75BBYNYN9J=GS1.1.1669942414.64.1.1669942548.0.0.0"
 # if c_k =="y":
 # cook = input("new cookiee->")
 headers = {
@@ -50,56 +47,59 @@ headers = {
     # change cookie!
     'cookie': cook
 }
+
 head = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
     'referer': 'https://www.google.com/',
 }
 
-is_down = False
-
-lines_variable = []
-
+lines_variable = []  # the rich.progress objects
+is_use_proxy = False  # global variables
+filter_likes = None
 
 
 def download(id, count):
     global save_path
-    url = 'https://www.pixiv.net/artworks/%d' % id
-    res = requests.get(url, headers=headers)
-    pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
-    '''
-    r = open("request.txt","a",encoding='utf-8')
-    r.write(str(res.text))
-    r.close()
-    '''
-    pic_name = re.findall(r'"illustTitle":"(.+?)"', res.text)[0]
-    # 获取后缀
-    extension = re.findall(r'....$', pic_url)[0]
-    pic_url = re.sub('.....$', '', pic_url)
-    if re.search('[\\\ \/ \* \? \" \: \< \> \|]', pic_name) != None:
-        pic_name = re.sub('[\\\ \/ \* \? \" \: \< \> \|]', '', pic_name)
-
-    ################################  proxy stuffs
-    for i in range(0, int(count)):
-        url = pic_url + str(i) + extension
-        if is_use_proxy:
-            c = getRandomIp()
-            prox = {"http": "http" + "://" + c, }
-
-        else:
-            prox = None
-    ################################
+    if is_use_proxy:
+        c = getRandomIp()
+        prox = {"http": "http" + "://" + c, }
+    else:
+        prox = None
 
     for i in range(0, int(count)):
-        url = pic_url + str(i) + extension
-        print("download id:" + str(id))
-        pic = requests.get(url, headers=headers, stream=True, proxies=prox)
+        i_data =ill_detail(int(id))
 
-        total = int(pic.headers.get('content-length', 0))
-        pic_url = (save_path + '/%s%d%s%s') % (pic_name, i + 1, '_' + str(id), extension)  # change path
-        with  open(pic_url, 'wb') as f:
-            f.write(pic.content)
-        pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
-        pic_url = re.sub('.....$', '', pic_url)
+        url_ = i_data[1] # [0]likes [1]url [2] pic name(required decode!)
+        extension = url_[len(url_) - 4:]  # get the extention
+        total_like= i_data[0]
+        url_ = url_[:len(url_) - 5] + str(i) + extension
+        pic_name=i_data[2].encode().decode('unicode_escape')
+        url = url_
+        #print(total_like)
+        pic_url = (save_path + '/%s%d%s%s') % (pic_name, i + 1, '_' + str(id), extension)
+        #print(id,os.path.exists(pic_url))
+        # useing the api to get picture by url
+        #print(prox)
+        if not os.path.exists(pic_url):
+            #print('no existed')
+            if filter_likes != None:
+                if total_like >= filter_likes:
+                    api_pic_request = requests.get(url, headers={'Referer': 'https://app-api.pixiv.net/'}, params=None, data=None,
+                                                   stream=True,timeout=10,proxies=prox)
+                     # change path
+                    print(f'id{id} fit condition!')
+                    with  open(pic_url, 'wb') as f:
+                        shutil.copyfileobj(api_pic_request.raw, f)
+                else:
+                   print(f'id{id} not fit condition!')
+                   break
+            elif filter_likes== None:
+                api_pic_request = requests.get(url, headers={'Referer': 'https://app-api.pixiv.net/'}, params=None,
+                                               data=None,
+                                               stream=True, timeout=10,proxies=prox)
+                pic_url = (save_path + '/%s%d%s%s') % (pic_name, i + 1, '_' + str(id), extension)  # change path
+                with  open(pic_url, 'wb') as f:
+                    shutil.copyfileobj(api_pic_request.raw, f)
 
 
 def trending():
@@ -122,14 +122,19 @@ def trending():
 
 def NormalS():
     global save_path
-
+    global filter_likes
     name = input("what you want to search:\n->")
+    ll= input("use the likes filter? (y or n )-> ")
+    if ll == 'y':
+        filter_likes=int(input("how much likes?->:"))
+    else:
+        filter_likes=None
+
     page = 1
     mode = 0
     start = 0
     end = 0
     tpage = 0
-
     url = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(
         name, name, page)
     total = getTotalPage(url)
@@ -157,16 +162,15 @@ def NormalS():
     else:
         os.mkdir(save_path)
     i = 1
-    thd = int(input("use how many thread use to download ?: "))
-    poxy = input("type y use proxy? : ")
     while i <= total:
         if mode == 1:
             if i <= tpage:
                 id = getpageids(name, None, 1, i)
                 if len(id) == 0:
                     i = total + 1
-                start_Thead(id, is_use_proxy, thd)
                 print(f"start downloading page{i}")
+                start_Thead(id, is_use_proxy, thd)
+                time.sleep(10)
             if i > tpage:
                 i = total + 1
         elif mode == 2:
@@ -174,23 +178,14 @@ def NormalS():
             if i > start and i < end:
                 id = getpageids(name, None, 1, i)
                 start_Thead(id, is_use_proxy, thd)
+                time.sleep(10)
         elif mode == 3:
             id = getpageids(name, None, 1, i)
             start_Thead(id, is_use_proxy, thd)
+        for i in range(len(lines_variable)):
+            lines_variable[i].remove()
         i += 1
-    #print("debug<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-    #while True:
-    #    time.sleep(5)
-    #    all_done = True
-    #    for x in Thread_varables:
-    #        if x.is_alive():
-    #            all_done = False
-    #    if all_done:
-    #        print("All jobs are done")
-    #        break
-    #    else:
-    #        print("Some job is still in progress.", threading.enumerate())
-    #print("debug<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+
 
 
 def changer():
@@ -212,14 +207,14 @@ def changer():
         sname, likes, sname, likes, page)
     page = getTotalPage(url)
     print(str(page) + " pages found!")
-    a = input("press y to start download")
+    a = input("press y to start download->:")
     id = []
     if a == "y":
 
         for i in range(page):
             print("download page: " + str(i + 1))
             id = getpageids(sname, likes, 1, i + 1)
-            print(id)
+            #print(id)
             if len(id) == 0:
                 return False
             else:
@@ -245,15 +240,14 @@ def iddownloader(id, pLines_variables):
                     isDown[randomid] = False
                     download(int(id[randomid]), 1)
                     i += 1
-                    #pLines_variables.get_obj().obj_update(i,id[randomid])
-                    progress.update(task,completed=i)
-                except:
+                    print(f"id:{id[randomid]} [bold green]successful download")
+                    progress.update(task, description=f"Thread [bold yellow]#{pLines_variables.get_taskid()}->[bold red]ID:{id[randomid]}",completed=i)
+                    time.sleep(random.randint(0, 3))
+                except Exception as e :
+                    print(str(e))
+                    print(f"id:{id[randomid]} [bold red]fail to download")
+                    time.sleep(random.randint(0, 3))
                     i += 1
-    print("end running of downloading ")
-    global is_down
-    is_down = True
-    print(threading.enumerate())
-    print(threading.active_count())
 
 
 
@@ -281,10 +275,9 @@ def getpageids(sname, likes, total, page):
 def cleanArray(arr):  # 9 digets
     new = []
     for x in range(len(arr)):
-        if len(arr[x]) > 9:
-            pass
-        else:
+        if len(arr[x]) == 9 or len(arr[x]) == 8:
             new.append(arr[x])
+
     arr = new
     return arr
 
@@ -300,68 +293,38 @@ def getTotalPage(url):
         return page
     else:
         return 1
-
-
-def M_Pid_search(num, end, mode, name):
-    id = []
-    print("getting ids pls wait for a while")
-    if mode == 1:
-        # get total id by pages
-        for x in range(num):
-            k = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(
-                name, name, x + 1)
-            print(k)
-            res = requests.get(k, headers=headers)
-            id = id + re.findall(r'"id":"(.+?)"', res.text)
-            time.sleep(random.randrange(0, 5))
-        return id
-    elif mode == 2:
-        for x in range(num, end + 1):
-            k = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(
-                name, name, x + 1)
-            # print(k)
-            res = requests.get(k, headers=headers)
-            id = id + re.findall(r'"id":"(.+?)"', res.text)
-            time.sleep(random.randrange(0, 5))
-        return id
-
-def start_Thead(id,poxy,thdN,thead_obj):
-    global process_L
-
-    if poxy == "y":
-        is_use_proxy=True
-    else:
-        is_use_proxy=False
-    div = len(id) // thdN
-    k = 1
-    while k <= thdN:
-        arr = id[div * (k - 1):div * (k)]
-        t = Thread(target=iddownloader, args=(arr,k-1,thead_obj,))
-        t.start()
-        k += 1
-
 def start_Thead(id, poxy, thdN):
     global process_L
     global Thread_varables
     global lines_variable
     Thread_varables = []
-
     if poxy == "y":
         is_use_proxy = True
     else:
         is_use_proxy = False
 
-    div = len(id) // thdN
+    av = len(id) // thdN
+    remainder = len(id)%thdN
 
     for i in range(thdN):
         lines_variable.append(create_process_lines())
-        lines_variable[i].creat(div, i + 1)
+        if i < thdN-1:
+            lines_variable[i].creat(av, i + 1)
+        else:
+            lines_variable[i].creat(av+remainder, i + 1)
 
     # devide the array to each thread !! last one id cannot accessible
-    k = 1
-    while k <= thdN:
-        arr = id[div * (k - 1):div * (k)]
-        thread = Thread(target=iddownloader, args=(arr, lines_variable[k - 1]))
+    k = 0
+    while k < thdN:
+        if k < thdN-1:
+            print(k)
+            arr=id[av * k:av * (k + 1)]
+        else:
+            print("had devided")
+            print(k,"yestsd")
+            arr=id[av * k:av * (k + 1) + remainder]
+        print(arr)
+        thread = Thread(target=iddownloader, args=(arr, lines_variable[k]))
         Thread_varables.append(thread)
         thread.start()
         time.sleep(0.1)
@@ -370,18 +333,72 @@ def start_Thead(id, poxy, thdN):
         x.join()
         time.sleep(0.1)
     print(threading.active_count(), ": Threads are working")
-    lines_variable = []
+
+    for i in lines_variable:
+        i.remove()
+    lines_variable=[]
     Thread_varables = []
 
 
-def Choser(n):
+def get_access_token():
+    local_time = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    hash_secret = "28c1fdd170a5204386cb1313c7077b34f83e4aaf4aa829ce78c231e05b0bae2c"
+    headers_token = {'app-os': 'ios', 'app-os-version': '14.6',
+                     'user-agent': 'PixivIOSApp/7.13.3 (iOS 14.6; iPhone13,2)', 'x-client-time': local_time,
+                     'x-client-hash': hashlib.md5((local_time + hash_secret).encode("utf-8")).hexdigest()}
+    data = {
+        "get_secure_url": 1,
+        "client_id": "MOBrBDS8blbauoSck0ZfDbtuzpyT",
+        "client_secret": "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj",
+        "grant_type": "refresh_token",
+        "refresh_token": "TeG9sEHMAlfq8Y_Ru-ciZC--tkfQJ2C4WqcFdgUKUO8"
+    }
+    headers_ = {
+        'app-os': 'ios',
+        'app-os-version': '14.6',
+        'user-agent': 'PixivIOSApp/7.13.3 (iOS 14.6; iPhone13,2)',
+        'Authorization': 'Bearer NHaa7POWzfx_nueyWFb9YmEd5xL1h5_jcXBmwvUSyr8'
+    }
+
+    url = "https://oauth.secure.pixiv.net/auth/token"
+    get_access_token = requests.post(url, headers=headers_token, data=data)
+    headers_['Authorization'] = "Bearer " + re.findall('"access_token":"(.+?)",', get_access_token.text)[0]
+
+    with open("access_tkoen.txt", "w") as f:
+        f.write(str(headers_))
+    return headers_
+
+
+def ill_detail(id):
+    # return an array contain total_view & pic_url
+    api_main = "https://app-api.pixiv.net"
+    ill_detail_url = "%s/v1/illust/detail" % api_main
+    ill_detail_params = {
+        "illust_id": id,
+    }
+    res = requests.get(ill_detail_url, headers=get_access_token(), params=ill_detail_params)
+    likes = int(re.findall(r'"total_view":(.+?),', res.text)[0])
+    ill_name_raw = repr(re.findall(r'"title":"(.+?)"', res.text)[0])
+    ill_name_raw=ill_name_raw.encode().decode('unicode_escape')
+    ill_name_raw=ill_name_raw.replace("'",'')
+    try:
+        pic_url = re.findall(r'"original_image_url":"(.+?)"', res.text)[0]
+    except:
+        pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
+    if re.search('[\\\ \ \* \? \" \ \< \> \|]', pic_url) != None:
+        pic_url = re.sub('[\\\ \ \* \? \" \ \< \> \|]', '', pic_url)
+    return [likes, pic_url,ill_name_raw]
+
+
+def Choser():
     global save_path
     global is_use_proxy
     global thd
-    is_use_proxy = input("type Y to use the proxy when download")
-    thd = int(input("use how many thread use to download ?: "))
+    n = int(input("1:(searching with rank ) 2:(daily trending mode), 3:(normal searching) 4(update proxy )\n->"))
+    if n == 1 or n == 2 or n == 3:
+        is_use_proxy = input("type Y to use the proxy when download")
+        thd = int(input("use how many thread use to download ?: "))
     if n == 1:  # search with ranking
-
         changer()
     elif n == 2:  # trending
         day = dateutil.utils.today()
@@ -395,6 +412,13 @@ def Choser(n):
 
     elif n == 3:
         NormalS()
+    elif n == 4:
+        print("updating proxy[bold yellow]------")
+        down_newProxy()
+        ip_proxy()
+    else:
+        pass
+
 
 def ip_proxy():
     # testing the workable ip proxy and save in local file
@@ -409,19 +433,21 @@ def ip_proxy():
         ipproxies.append("{}:{}".format(ip_pool[i], prot_pool[i]))
     for i in range(len(ip_pool)):
         try:
-            res = requests.get(url="https://i.pximg.net/img-master/img/2022/11/27/02/27/56/103127937_p0_master1200.jpg",
+            res = requests.get(url="https://pixiv.net",
                                headers=headers, proxies={"http": "http" + "://" + ipproxies[i]}, timeout=1)
             if res.status_code == 200:
-                print(ipproxies[i], "可用")
+                # print(ipproxies[i], "可用")
                 print({"http": "http" + "://" + ipproxies[i]})
                 ipproxies_Good.append(ipproxies[i])
 
         except:
-            print(ipproxies[i], "不可用")
+            # print(ipproxies[i], "不可用")
             print({"http": "http" + "://" + ipproxies[i]})
     print(ipproxies_Good)
     with open("ip_work.txt", 'w') as f:
         f.write(str(ipproxies_Good))
+    print(f"{len(ipproxies_Good)} proxies available[green bold] ")
+    print(f"proxies had been written in to file!!! update if necessary[red bold]")
 
 
 def getRandomIp():
@@ -441,63 +467,38 @@ def down_newProxy():
 # process line
 class create_process_lines():
     def __init__(self):
-        self.obj = []
+        self.obj = None
         self.total = 0
         self.taks_Numbers = 0
 
     def creat(self, total, taks_Number):
-        taks_Numbers = taks_Number
+        self.taks_Numbers = taks_Number
         self.total = total
-        ids = None
-        self.obj.append(progress.add_task(description=f"Job [bold yellow]#{taks_Number}#", total=total))
+        self.obj=progress.add_task(description=f"Job [bold yellow]#{taks_Number}#", total=total)
 
     def get_obj(self):
-        return self.obj[0]
+        return self.obj
 
     def get_total(self):
         return self.total
 
     def get_taskid(self):
         return self.taks_Numbers
-
-# download(33165101,1)
-
-Choser(int(input("1:(searching with rank ) 2:(daily trending mode), 3:(normal searching)\n->")))
-# NormalS()
-# id = getpageids("scaramouche","1000",1,1)
-# down_newProxy()
-# ip_proxy()
-# print(getRandomIp())
-# print(type(getRandomIp()))
-# res = requests.get("https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=1")
-# down_newProxy()
-# download(103070297,1)
-
-'''def t ():
-    with progress:
-        for c in range(3):
-            for wait in progress.track(range(100), task_id=new_line.get_obj()):
-                time.sleep(0.1)
-            progress.reset(new_line.get_obj(), total=100)
-            progress.start_task(new_line.get_obj())
+    def remove(self):
+        progress.remove_task(self.obj)
 
 
-new_line2 =create_process_lines()
-new_line2.creat(100,1)
-thread = Thread(target=t,)
-total = new_line.get_total()
-print(total,"total of object")
-t()'''
-'''
-ran_array = []
-for i in range(101):
-    ran_array.append(random.randint(0,9))
+#download(103432943,1)
+Choser()
+#download
 
-new_line =create_process_lines()
-new_line.creat(100,1)
-a = progress.add_task(description="f{100}",total=100)
-with progress:
-    for i in range(101):
-        progress.update(a,description=f"Job [bold yellow]#{1}#{ran_array[i]}",completed=i)
-        time.sleep(0.1)
-'''
+
+
+
+
+
+
+api_main = "https://app-api.pixiv.net"
+user_ill = "%s/v1/user/illusts" % api_main
+user_like = "%s/v1/user/bookmarks/illust" % api_main
+user_like_para = {"user_id": 52047359, "filter": "for_ios", "restrict": "public", "max_bookmark_id": None, "tag": None}
