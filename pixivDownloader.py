@@ -5,7 +5,6 @@ import re
 import time
 from threading import Thread
 import requests
-from tqdm import tqdm
 import ast
 import hashlib
 import threading
@@ -110,25 +109,6 @@ def download(id, count):
                 pic_url=re.sub('[\\\ |]','',pic_url)
                 with  open(pic_url, 'wb') as f:
                     shutil.copyfileobj(api_pic_request.raw, f)
-
-def trending():
-    id = []
-    count = []
-    for i in range(1, 2):
-        url = 'https://www.pixiv.net/ranking.php?p=%d&format=json' % i
-        res = requests.get(url, headers=headers)
-        id = id + re.findall('"illust_id":(\d+)', res.text)
-        count = count + re.findall('"illust_page_count":"(\d+)"', res.text)
-    if len(id) == len(count):
-        for i in tqdm(range(0, len(id)), desc="downloading", unit="pic", position=0):
-
-            try:
-                download(int(id[i]), int(count[i]))
-            except:
-                time.sleep(0.1)
-                download(int(id[i]), int(count[i]))
-
-
 def NormalS():
     global save_path
     global filter_likes
