@@ -1,4 +1,2 @@
-python_dateutil
 requests
 rich
-tqdm
