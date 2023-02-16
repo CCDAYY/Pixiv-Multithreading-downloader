@@ -25,7 +25,6 @@ from rich.progress import (
 )
 import traceback
 
-
 progress = Progress(
     TextColumn("[progress.description]{task.description}"),
     BarColumn(),
@@ -53,78 +52,116 @@ head = {
     'referer': 'https://www.google.com/',
 }
 lines_variable = []  # the rich.progress objects
+fail_id =[]
 is_use_proxy = False  # global variables
 filter_likes = None
+thd = 1
 lock = threading.Lock()
-def download(id, count):
+illustration_pool =[]
+
+def download(id):
+    print(id,"download")
     global save_path
-    local_save_path= ''
-    or_samve_path=save_path
+    global fail_id
+    local_save_path = ''
+    or_samve_path = save_path
     if is_use_proxy:
         c = getRandomIp()
         prox = {"http": "http" + "://" + c, }
     else:
         prox = None
-    i_data = ill_detail(int(id))
-    if i_data==None:
-        print(f"{id} is not a illustration")
-        return None
-    count=i_data[3]
-    #print(count,id)
-    if count > 1:
-        local_save_path = save_path + '/%s' % (str(id))
-        if os.path.exists(local_save_path) == True:
-            pass
-        else:
-            os.mkdir(local_save_path)
-    else:
-        local_save_path=save_path
-    for i in range(0, int(count)):
-        url_ = i_data[1] # [0]likes [1]url [2] pic name(required decode!)
-        extension = url_[len(url_) - 4:]  # get the extention
-        total_like= i_data[0]
-        url_ = url_[:len(url_) - 5] + str(i) + extension
-        pic_name=i_data[2].encode().decode('unicode_escape')
-        url = url_
-        pic_url = (local_save_path + '/%s%d%s%s') % (pic_name,i + 1, '_' + str(id), extension)
-        # useing the api to get picture by url
 
-        if not os.path.exists(pic_url):
-            if filter_likes != None:
-                if total_like >= filter_likes:
-                    api_pic_request = requests.get(url, headers={'Referer': 'https://app-api.pixiv.net/'}, params=None, data=None,
-                                                   stream=True,timeout=10,proxies=prox)
-                     # change path
-                    print(f'id{id} fit condition!')
-                    with  open(pic_url, 'wb') as f:
-                        shutil.copyfileobj(api_pic_request.raw, f)
+    try:
+        i_data = ill_detail(int(id))
+        if i_data == None:
+            print(f"{id} is not a illustration")
+            return None
+        total_like = i_data[0]
+        count = i_data[3]
+        # print(count,id)
+        if count > 1 :
+            if (filter_likes !=None and total_like>=filter_likes) or filter_likes == None:
+                local_save_path = save_path + '/%s' % (str(id))
+                if os.path.exists(local_save_path) == True:
+                    pass
                 else:
-                   print(f'id{id} not fit condition!')
-                   break
-            elif filter_likes== None:
-                api_pic_request = requests.get(url, headers={'Referer': 'https://app-api.pixiv.net/'}, params=None,
-                                               data=None,
-                                               stream=True, timeout=10,proxies=prox)
-                pic_url = (local_save_path + '/%s%d%s%s') % (pic_name+"_",i + 1, '_' + str(id), extension)  # change path
-                pic_url=re.sub('[\\\ |]','',pic_url)
-                with  open(pic_url, 'wb') as f:
-                    shutil.copyfileobj(api_pic_request.raw, f)
+                    os.mkdir(local_save_path)
+            else:
+                return
+
+        else:
+            local_save_path = save_path
+        for i in range(0, int(count)):
+            url_ = i_data[1]  # [0]likes [1]url [2] pic name(required decode!)
+            extension = url_[len(url_) - 4:]  # get the extention
+
+            url_ = url_[:len(url_) - 5] + str(i) + extension
+            pic_name = i_data[2].encode().decode('unicode_escape')
+            url = url_
+            pic_url = (local_save_path + '/%s%d%s%s') % (pic_name, i + 1, '_' + str(id), extension)
+            # useing the api to get picture by url
+
+            if  not os.path.isfile(pic_url):
+                if filter_likes != None:
+                    if total_like >= filter_likes:
+                        api_pic_request = requests.get(url, headers={'Referer': 'https://app-api.pixiv.net/'},
+                                                       params=None, data=None,
+                                                       stream=True, timeout=2, proxies=prox)
+                        # change path
+                        print(f'id{id} fit condition!')
+                        try:
+                            with  open(pic_url, 'wb') as f:
+                                shutil.copyfileobj(api_pic_request.raw, f)
+                        except:
+                            without_uni = (local_save_path + '/%s%d%s') % (str(id), i + 1, extension)
+                            with  open(without_uni, 'wb') as f:
+                                shutil.copyfileobj(api_pic_request.raw, f)
+                    else:
+                        print(f'id{id} not fit condition!')
+                        break
+                elif filter_likes == None:
+                    api_pic_request = requests.get(url, headers={'Referer': 'https://app-api.pixiv.net/'}, params=None,
+                                                   data=None,
+                                                   stream=True, timeout=2, proxies=prox)
+                    pic_url = (local_save_path + '/%s%d%s%s') % (
+                        pic_name + "_", i + 1, '_' + str(id), extension)  # change path
+                    pic_url = re.sub('[\\\ |"<>!*?]', '', pic_url)
+                    try:
+                        with  open(pic_url, 'wb') as f:
+                            shutil.copyfileobj(api_pic_request.raw, f)
+                    except:
+                        without_uni = (local_save_path + '/%s%d%s') % (str(id), i + 1, extension)
+                        with  open(without_uni, 'wb') as f:
+                            shutil.copyfileobj(api_pic_request.raw, f)
+            else:
+                print(f"{id} is downloaded")
+        lines_variable[0].update()
+        showthread()
+    except Exception as e:
+        lines_variable[0].update()
+        print("download", "->" * 10)
+        fail_id.append(id)
+        print(e)
+        time.sleep(random.randint(0,5))
+
+
 def NormalS():
     global save_path
     global filter_likes
     name = input("what you want to search:\n->")
-    ll= input("use the likes filter? (y or n )-> ")
+    ll = input("use the likes filter? (y or n )-> ")
     mode_search = input("mode:safe,r18 or all->")
     if ll == 'y':
-        filter_likes=int(input("how much likes?->:"))
+        filter_likes = int(input("how much likes?->:"))
     else:
-        filter_likes=None
+        filter_likes = None
     page = 1
     mode = 0
     start = 0
     end = 0
     tpage = 0
-    url = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(name, name, page)
+    url = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(
+        name, name, page)
     total = getTotalPage(url)
     print(str(total) + " pages found!")
     dettt = int(input("type 1 search specific pages, or type 2 search a range pages, type 3 download all pages:"))
@@ -153,28 +190,25 @@ def NormalS():
     while i <= total:
         if mode == 1:
             if i <= tpage:
-                id = getpageids(name, None, 1, i,mode_search)
+                id = getpageids(name, None, 1, i, mode_search)
                 if len(id) == 0:
                     i = total + 1
-                print(f"start downloading page{i}")
+                print(f"start downloading page:{i}[bold yellow]")
                 start_Thead(id, is_use_proxy, thd)
+                print(f"finsihed the page:{i}!!!")
                 time.sleep(10)
             if i > tpage:
                 i = total + 1
         elif mode == 2:
             # rage
             if i > start and i <= end:
-                id = getpageids(name, None, 1, i,mode_search)
+                id = getpageids(name, None, 1, i, mode_search)
                 start_Thead(id, is_use_proxy, thd)
                 time.sleep(10)
         elif mode == 3:
-            id = getpageids(name, None, 1, i,mode_search)
+            id = getpageids(name, None, 1, i, mode_search)
             start_Thead(id, is_use_proxy, thd)
-
-            for i in range(len(lines_variable)):
-                lines_variable[i].remove()
         i += 1
-
 
 
 def changer():
@@ -211,43 +245,16 @@ def changer():
         pass
 
 
-def iddownloader(id, pLines_variables):
-    isDown = []
-    for i in range(len(id)):
-        isDown.append(True)
-    with progress:
-        i = 0
-        task = pLines_variables.get_obj()
-        while i < len(id):
-            try:
-                randomid = random.randint(0, len(id) - 1)
-                while not isDown[randomid]:
-                    randomid = random.randint(0, len(id) - 1)
-                isDown[randomid] = False
-                download(int(id[randomid]), 1)
-                i += 1
-                print(f"id:{id[randomid]} [bold green]successful download")
-                progress.update(task, description=f"Thread [bold yellow]#{pLines_variables.get_taskid()}->[bold red]ID:{id[randomid]}",completed=i)
-                time.sleep(random.randint(0, 2))
-            except Exception as e :
-                #traceback.print_exc() #only for debugging
-                print(str(e))
-                print(f"id:{id[randomid]} [bold red] exception occurred fail to download")
-                i += 1
-                time.sleep(random.randint(5,15))
-
-
-
-
-def getpageids(sname, likes, total, page,mode):
+def getpageids(sname, likes, total, page, mode):
     id = []
     if likes == None:
         for x in range(total):
-            k = "https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode={}&p={}&s_mode=s_tag&type=all&lang=zh".format(sname, sname, mode, page)
+            k = "https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode={}&p={}&s_mode=s_tag&type=all&lang=zh".format(
+                sname, sname, mode, page)
             "k = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(sname, sname, page)"
             res = requests.get(k, headers=headers)
             id = id + re.findall(r'"id":"(.+?)"', res.text)
-            time.sleep(random.randint(2,5))
+            time.sleep(random.randint(2, 5))
     else:
         for x in range(total):
             likes = str(likes) + "users"
@@ -282,46 +289,66 @@ def getTotalPage(url):
         return page
     else:
         return 1
+
+
+def bar_line_live():
+    with progress:
+        while not progress.finished:
+            progress.update(lines_variable[0].get_obj(),
+                            description=f"Thread [bold yellow]#{lines_variable[0].get_taskid()}->[bold red]",
+                            completed=lines_variable[0].get_completed())
+            time.sleep(0.01)
+
+
+def showthread():
+    #print(threading.enumerate())
+    time.sleep(0.01)
+
 def start_Thead(id, poxy, thdN):
+    print("start the thread")
     global process_L
     global Thread_varables
     global lines_variable
     Thread_varables = []
+    global illustration_pool
     if poxy == "y":
         is_use_proxy = True
     else:
         is_use_proxy = False
-
-    av = len(id) // thdN
-    remainder = len(id)%thdN
-
-    for i in range(thdN):
-        lines_variable.append(create_process_lines())
-        if i < thdN-1:
-            lines_variable[i].creat(av, i + 1)
-        else:
-            lines_variable[i].creat(av+remainder, i + 1)
-
-    k = 0
-    while k < thdN:
-        if k < thdN-1:
-            arr=id[av * k:av * (k + 1)]
-        else:
-            arr=id[av * k:av * (k + 1) + remainder]
-        thread = Thread(target=iddownloader, args=(arr, lines_variable[k]))
-        Thread_varables.append(thread)
-        thread.start()
-        time.sleep(0.1)
-        k += 1
-    for x in Thread_varables:
-        x.join()
-        time.sleep(0.1)
-    print(threading.active_count(), ": Threads are working")
-    print(progress.finished)
-    for i in lines_variable:
-        i.remove()
-    lines_variable=[]
-    Thread_varables = []
+    lines_variable.append(create_process_lines())
+    lines_variable[0].creat(len(id), 1)
+    Line_Thread = Thread(target=bar_line_live)
+    Line_Thread.start()
+    for i in range(len(id)):
+        illustration_pool.append(cread_ill_objects())
+        illustration_pool[i].creat(id[i], False)
+    for x in illustration_pool:
+        print(x.get_ill_id() , x.is_downloaded())
+    print(f'{len(id)} picture going to download[bold green]')
+    for dev in range((len(id) // thdN)):
+        temp_job_list = []
+        for group in range(thdN):
+            random_choose = random.choice(illustration_pool)
+            while random_choose.is_downloaded():
+                random_choose = random.choice(illustration_pool)
+            thread = Thread(target=download, args=(random_choose.get_ill_id(),))
+            random_choose.setter()
+            print(random_choose.is_downloaded(), random_choose.get_ill_id())
+            print(random_choose.get_ill_id(), f'{dev}current ids')
+            temp_job_list.append(thread)
+        for jobs in temp_job_list:
+            jobs.start()
+        for wait in temp_job_list:
+            wait.join()
+    for objs in illustration_pool:
+        if not objs.is_downloaded():
+            download(objs.get_ill_id())
+            objs.setter()
+        #print(f"{objs.get_ill_id()}not yet downloaded")
+    lines_variable[0].reset_complete()
+    lines_variable[0].remove()
+    illustration_pool=[]
+    print("finished the thread", end="")
 
 
 def get_access_token():
@@ -346,6 +373,7 @@ def get_access_token():
 
     url = "https://oauth.secure.pixiv.net/auth/token"
     get_access_token = requests.post(url, headers=headers_token, data=data)
+
     headers_['Authorization'] = "Bearer " + re.findall('"access_token":"(.+?)",', get_access_token.text)[0]
 
     with open("access_tkoen.txt", "w") as f:
@@ -360,23 +388,25 @@ def ill_detail(id):
     ill_detail_params = {
         "illust_id": id,
     }
-    res = requests.get(ill_detail_url, headers=get_access_token(), params=ill_detail_params)
+
     try:
+        res = requests.get(ill_detail_url, headers=get_access_token(), params=ill_detail_params)
         likes = int(re.findall(r'"total_view":(.+?),', res.text)[0])
     except:
         return None
     ill_name_raw = repr(re.findall(r'"title":"(.+?)"', res.text)[0])
-    ill_name_raw=ill_name_raw.encode().decode('unicode_escape')
-    ill_name_raw=ill_name_raw.replace("'",'')
-    ill_name_raw=re.sub('[\\\  /,"],[/^u]','',ill_name_raw)
-    page_count= int(re.findall(r'"page_count":(.+?),',res.text)[0])
+    ill_name_raw = ill_name_raw.encode().decode('unicode_escape')
+    ill_name_raw = ill_name_raw.replace("'", '')
+    ill_name_raw = ill_name_raw.replace("\/", '')
+    page_count = int(re.findall(r'"page_count":(.+?),', res.text)[0])
+
     try:
         pic_url = re.findall(r'"original_image_url":"(.+?)"', res.text)[0]
     except:
         pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
     if re.search('[\\\ \ \* \? \" \ \< \> \| ,]', pic_url) != None:
         pic_url = re.sub('[\\\ \ \* \? \" \ \< \> \| ,]', '', pic_url)
-    return [likes, pic_url,ill_name_raw,page_count]
+    return [likes, pic_url, ill_name_raw, page_count]
 
 
 def Choser():
@@ -384,9 +414,11 @@ def Choser():
     global is_use_proxy
     global thd
     try:
-        test = requests.get("http://www.pixiv.net",headers= headers,timeout=1)
-        if test.status_code==200:
-            n = int(input("1:(searching with rank(by tags)) 2:(different ranking mode), 3:(normal searching) 4(update proxy ) 5(user likes) 6 (download from illustrator)\n->"))
+        test = requests.get("http://www.pixiv.net", headers=headers, timeout=1)
+        if test.status_code == 200:
+            n = int(input(
+                "1:(searching with rank(by tags)) 2:(different ranking mode), 3:(normal searching) 4(update proxy ) 5(user likes) 6 (download from illustrator)\n->"))
+
             if n == 1 or n == 2 or n == 3:
                 is_use_proxy = input("type Y to use the proxy when download")
                 thd = int(input("use how many thread use to download ?: "))
@@ -402,22 +434,26 @@ def Choser():
                 ip_proxy()
             elif n == 5:
                 api_main = "https://app-api.pixiv.net"
-                user_like_para = {"user_id": 52047359, "filter": "for_ios", "restrict": "public", "max_bookmark_id": None,
+
+                user_like_para = {"user_id": 52047359, "filter": "for_ios", "restrict": "public",
+                                  "max_bookmark_id": None,
                                   "tag": None}
+
                 user_like = "%s/v1/user/bookmarks/illust" % api_main
                 rc = requests.get(user_like, params=user_like_para, headers=get_access_token())
                 r = re.findall(r'"id":(.+?),', rc.text)
-                id=cleanArray(r)
-                start_Thead(id,is_use_proxy,4)
-            elif n ==6:
-                illustrator_id=input("type illustrator id there->")
+                id = cleanArray(r)
+                start_Thead(id, is_use_proxy, thd)
+            elif n == 6:
+                illustrator_id = input("type illustrator id there->")
                 illustrator_mode(illustrator_id)
             else:
                 pass
-    except:
-        print(print("fail to send request to pixiv.net\npls check you network or turn on VPN on"))
-        pass
-
+        else:
+            print("unable to establish the connection[bold red]")
+    except Exception as e:
+        print("chooser","->"*10)
+        traceback.print_exc()
 
 
 def ip_proxy():
@@ -464,40 +500,19 @@ def down_newProxy():
         f.write(res.text)
 
 
-# process line
-class create_process_lines():
-    def __init__(self):
-        self.obj = None
-        self.total = 0
-        self.taks_Numbers = 0
-
-    def creat(self, total, taks_Number):
-        self.taks_Numbers = taks_Number
-        self.total = total
-        self.obj=progress.add_task(description=f"Job [bold yellow]#{taks_Number}#", total=total)
-
-    def get_obj(self):
-        return self.obj
-
-    def get_total(self):
-        return self.total
-
-    def get_taskid(self):
-        return self.taks_Numbers
-    def remove(self):
-        progress.remove_task(self.obj)
-
 def raw_processer(text):
-    id=[]
+    id = []
     id = re.findall(r'"id":(.+?),', text)
     return cleanArray(id)
+
 
 def illustrator_mode(id):
     api_main = "https://app-api.pixiv.net"
     user_ill = "%s/v1/user/illusts" % api_main
-    user_detail = "%s/v1/user/detail" %api_main
+    user_detail = "%s/v1/user/detail" % api_main
     global save_path
-    save_path ="./{}".format(id)
+    global thd
+    save_path = "./{}".format(id)
     if os.path.exists(save_path) == True:
         pass
     else:
@@ -512,64 +527,101 @@ def illustrator_mode(id):
         "filter": "for_ios",
         "offset": 1,
     }
-    user_detaill=requests.get(user_detail,headers=get_access_token(),params=params_user)
-    user_total_ill=re.findall(r'"total_illusts":(.+?),',user_detaill.text)[0]
+    user_detaill = requests.get(user_detail, headers=get_access_token(), params=params_user)
+    user_total_ill = re.findall(r'"total_illusts":(.+?),', user_detaill.text)[0]
     print(user_total_ill)
-    user_detaill= int(user_total_ill)//30
+    user_detaill = int(user_total_ill) // 30
     print(user_detaill)
     for i in range(user_detaill):
-        params["offset"]=i*30
+        params["offset"] = i * 30
         resc = requests.get(user_ill, headers=get_access_token(), params=params)
-        start_Thead(raw_processer(resc.text), None, 4)
+        start_Thead(raw_processer(resc.text), None, thd)
+
 
 def ranking():
     global save_path
-    types = ["day","week","month","day_male","day_female","week_original","week_rookie","day_manga","day_r18","day_male_r18","day_female_r18","week_r18","week_r18g"]
+    global thd
+    types = ["day", "week", "month", "day_male", "day_female", "week_original", "week_rookie", "day_manga", "day_r18",
+             "day_male_r18", "day_female_r18", "week_r18", "week_r18g"]
     param = {"mode": "day", "filter": "for_ios", "date": None, "offset": None}
     type_Rank_url = "https://app-api.pixiv.net/v1/illust/ranking"
     now = datetime.now()
     day = now.strftime("_%m_%d_%Y")
     for i in range(len(types)):
-        print(f"{types[i]}: {i+1}",end=" ")
-    choose = int(input("\nwhich type ranking you want to apply(by numbers)->\n:"))-1
-    if choose<=len(types):
+        print(f"{types[i]}: {i + 1}", end=" ")
+    choose = int(input("\nwhich type ranking you want to apply(by numbers)->\n:")) - 1
+    if choose <= len(types):
         print(f"using {types[choose]} mode")
-        param["mode"]=types[choose]
+        param["mode"] = types[choose]
     else:
         print("using default mode -> day")
-        param["mode"]="day"
+        param["mode"] = "day"
     save_path = str(f"./{types[choose]}%s") % (day)
     if os.path.exists(save_path) == True:
         pass
     else:
         os.mkdir(save_path)
-    r= requests.get(type_Rank_url,params=param,headers=get_access_token())
+    r = requests.get(type_Rank_url, params=param, headers=get_access_token())
     id = raw_processer(r.text)
-    start_Thead(id,is_use_proxy,thd)
+    print(id)
+    print(len(id))
+    start_Thead(id, is_use_proxy, thd)
 
+class create_process_lines():
+    def __init__(self):
+        self.obj = None
+        self.total = 0
+        self.completed = 0
+        self.taks_Numbers = 0
+
+    def creat(self, total, taks_Number):
+        self.taks_Numbers = taks_Number
+        self.total = total
+        self.obj = progress.add_task(description=f"Job [bold yellow]#{taks_Number}#", total=total)
+
+    def get_obj(self):
+        return self.obj
+
+    def get_total(self):
+        return self.total
+
+    def get_taskid(self):
+        return self.taks_Numbers
+
+    def remove(self):
+        progress.remove_task(self.obj)
+
+    def update(self):
+        self.completed += 1
+
+    def get_completed(self):
+        return self.completed
+    def reset_complete(self):
+        self.completed=0
+
+
+class cread_ill_objects():
+    def __init__(self):
+        self.id = 0
+        self.is_downloable = False
+
+    def creat(self, id, download_status):
+        self.id = id
+        self.is_downloable = download_status
+
+    def get_ill_id(self):
+        return self.id
+
+    def is_downloaded(self):
+        return self.is_downloable
+
+    def setter(self):
+        self.is_downloable = True
 Choser()
-
+for x in illustration_pool:
+    print(x.get_ill_id(), x.is_downloaded())
+print(fail_id)
 
 api_main = "https://app-api.pixiv.net"
 user_ill = "%s/v1/user/illusts" % api_main
 type_Rank_url = "https://app-api.pixiv.net/v1/illust/ranking"
-
-'''_MODE: TypeAlias = Literal[
-    "day",
-    "week",
-    "month",
-    "day_male",
-    "day_female",
-    "week_original",
-    "week_rookie",
-    "day_manga",
-    "day_r18",
-    "day_male_r18",
-    "day_female_r18",
-    "week_r18",
-    "week_r18g",
-    "",
-]'''
-
-
-
