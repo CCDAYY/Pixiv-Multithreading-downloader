@@ -11,7 +11,6 @@ import time
 import traceback
 from datetime import datetime
 from threading import Thread
-
 import requests
 from rich import print
 from rich.progress import (
@@ -60,12 +59,16 @@ else:
 lines_variable = []  # the rich.progress objects
 fail_id = []
 filter_likes = None
-thd = 1
+thd = 4
 illustration_pool = []
 
+def getpictures(path):
+    files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.png') or f.endswith('.jpg')]
+    for x in range(len(files)):
+        files[x]=files[x].replace('\\','/')
+    return files
 
 def download(id):
-    #print(id, "download")
     global save_path
     global fail_id
 
@@ -77,57 +80,53 @@ def download(id):
         for i in range(0, int(count)):
             url_ = i_data[1]  # [0]likes [1]url [2] pic name(required decode!)
             extension = url_[len(url_) - 4:]  # get the extention
-
             url_ = url_[:len(url_) - 5] + str(i) + extension
             pic_name = i_data[2].encode().decode('unicode_escape')
             url = url_
             pic_url = (local_save_path + '/%s%d%s%s') % (pic_name, i + 1, '_' + str(id), extension)
+            pic_url = re.sub('[\\\ |"<>!*?]', '', pic_url)
+            print(f'[bold yellow] {pic_url}')
             # useing the api to get picture by url
-
-            if not os.path.exists(pic_url):
+            files = getpictures(save_path)
+            if not pic_url in files:
                 if filter_likes != None:
                     if total_like >= filter_likes:
-                        api_pic_request = master_request(method="GET", url=url,
-                                                         header={'Referer': 'https://app-api.pixiv.net/'},
-                                                         is_token=False, parameters=None)
-                        # api_pic_request = requests.get(url, headers={'Referer': 'https://app-api.pixiv.net/'},params=None, data=None,stream=True, timeout=2)
-                        # change path
+                        api_pic_request = master_request(method="GET", url=url,header={'Referer': 'https://app-api.pixiv.net/'},is_token=False, parameters=None)
                         print(f'id{id} fit condition!')
                         try:
                             with  open(pic_url, 'wb') as f:
                                 shutil.copyfileobj(api_pic_request.raw, f)
                         except:
-                            without_uni = (local_save_path + '/%s%d%s') % (str(id), i + 1, extension)
-                            with  open(without_uni, 'wb') as f:
+                            with  open(f'local_save_path+/{id+extension}', 'wb') as f:
                                 shutil.copyfileobj(api_pic_request.raw, f)
                     else:
                         print(f'id{id} not fit condition!')
                         break
-                elif filter_likes == None:
 
-                    api_pic_request = master_request(method="GET", url=url,
-                                                     header={'Referer': 'https://app-api.pixiv.net/'}, is_token=False,
-                                                     parameters=None)
-                    pic_url = (local_save_path + '/%s%d%s%s') % (
-                        pic_name + "_", i + 1, '_' + str(id), extension)  # change path
-                    pic_url = re.sub('[\\\ |"<>!*?]', '', pic_url)
+                elif filter_likes == None:
+                    api_pic_request = master_request(method="GET", url=url,header={'Referer': 'https://app-api.pixiv.net/'}, is_token=False,parameters=None)
                     try:
-                        with  open(pic_url, 'wb') as f:
+                        with open(pic_url, 'wb') as f:
                             shutil.copyfileobj(api_pic_request.raw, f)
                     except:
-                        without_uni = (local_save_path + '/%s%d%s') % (str(id), i + 1, extension)
-                        with  open(without_uni, 'wb') as f:
+                        with  open(f'local_save_path+/{id + extension}', 'wb') as f:
                             shutil.copyfileobj(api_pic_request.raw, f)
+
         lines_variable[0].update()
-    except Exception as e:
-        print(f"error occur{id}: ", e)
+    except:
+        #print(f"{f}-> fail during download ")
         lines_variable[0].update()
         time.sleep(random.randint(0, 5))
 
 
 def raw_processer(text):
     id = re.findall(r'"id":(.+?),', text)
-    return cleanArray(id)
+    user_id = re.findall(r'"user":{"id":(.+?),', text)
+    new_id = []
+    for i in range(len(id)):
+        if not id[i] in user_id:
+            new_id.append(id[i])
+    return new_id
 
 
 def NormalS():
@@ -135,22 +134,22 @@ def NormalS():
     global filter_likes
     name = input("what you want to search:\n->")
     ll = input("use the likes filter? (y or n )-> ")
-
-    mode = ["partial_match_for_tags", "exact_match_for_tags", "title_and_caption"]
-    print(mode[:])
-    choose = int(input("which one-> (EX,0,1,2)"))
-    mode_search = mode[choose]
     if ll == 'y':
         filter_likes = int(input("how much likes?->:"))
     else:
         filter_likes = None
+    mode = ["partial_match_for_tags", "exact_match_for_tags", "title_and_caption"]
+    print(mode[:])
+    choose = int(input("which one-> (EX,0,1,2)"))
+    mode_search = mode[choose]
+
     page = 1
     mode = 0
     start = 0
     end = 0
     tpage = 0
-    url = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(
-        name, name, page)
+
+    url = 'https://www.pixiv.net/ajax/search/artworks/{}?word={}&order=date_d&mode=all&p={}&s_mode=s_tag_full&type=all&lang=zh&format=json'.format(name, name, page)
     total = getTotalPage(url)
     print(str(total) + " pages found!")
     dettt = int(input("type 1 search specific pages, or type 2 search a range pages, type 3 download all pages:"))
@@ -168,7 +167,6 @@ def NormalS():
         end = endd
     elif dettt == 3:
         mode = 3
-
     ## create file
     save_path = save_path + '/' + name
     if os.path.exists(save_path) == True:
@@ -185,19 +183,23 @@ def NormalS():
                     i = total + 1
                 print(f"start downloading page:{i}[bold yellow]")
                 start_Thead(id, thd)
-                print(f"finsihed the page:{i}!!!")
+                print(f"[bold green ]finsihed the page:{i}!!!")
                 time.sleep(10)
             if i > tpage:
                 i = total + 1
         elif mode == 2:
+            print(f"start downloading page:{i}[bold yellow]")
             id = getpageids(sname=name, page=i, total=1, mode=mode_search)
             # rage
             if i > start and i <= end:
                 start_Thead(id, thd)
                 time.sleep(10)
+            print(f"[bold green ]finsihed the page:{i}!!!")
         elif mode == 3:
+            print(f"start downloading page:{i}[bold yellow]")
             id = getpageids(sname=name, page=i, total=1, mode=mode_search)
             start_Thead(id, thd)
+            print(f"[bold green ]finsihed the page:{i}!!!")
             time.sleep(10)
         i += 1
 
@@ -206,9 +208,7 @@ def changer():
     global save_path
     sname = input("type the things that you want to seach :\n")
     likes = int(input("choose either of : 50,100,300,500,1000,5000,10000 :\n"))
-
     page = 1
-
     n_Num = sname + str(likes)
     save_path = save_path + "/" + n_Num
     if os.path.exists(save_path) == True:
@@ -243,25 +243,17 @@ def getpageids(sname: str, total: int, page: int | None = None, mode: str | None
     return id
 
 
-def cleanArray(arr):  # 9 digets
-    new = []
-    for x in range(len(arr)):
-        if len(arr[x]) == 9:
-            new.append(arr[x])
 
-    arr = new
-    return arr
 
 
 def getTotalPage(url):
     res = master_request(method="GET", url=url, header=headers, is_token=False)
-    # res = requests.get(url, headers=headers)
     total = re.findall(r'"total":(.+?),', res.text)
     print(total, "images found")
     page = 1
     ct = int(total[0])
-    if ct > 60:
-        page += int(ct / 60)
+    if ct >= 30:
+        page += ct // 30
         return page
     else:
         return 1
@@ -332,7 +324,7 @@ def search(name: str, search_mode: str, offset: str | int | bool, duration: str 
     return raw_processer(res.text)
 
 
-def ill_detail(id):
+def ill_detail(id: object) -> object:
     # return an array contain total_view & pic_url
     api_main = "https://app-api.pixiv.net"
     ill_detail_url = "%s/v1/illust/detail" % api_main
@@ -341,24 +333,23 @@ def ill_detail(id):
     }
 
     res = master_request(method="GET", url=ill_detail_url, is_token=True, parameters=ill_detail_params)
-    if res.status_code in {200, 301, 302}:
-        likes = int(re.findall(r'"total_view":(.+?),', res.text)[0])
-        ill_name_raw = repr(re.findall(r'"title":"(.+?)"', res.text)[0])
-        page_count = int(re.findall(r'"page_count":(.+?),', res.text)[0])
-        ill_name_raw = ill_name_raw.encode().decode('unicode_escape')
-        ill_name_raw = ill_name_raw.replace("'", '')
-        ill_name_raw = ill_name_raw.replace("\/", '')
-
-        try:
-            pic_url = re.findall(r'"original_image_url":"(.+?)"', res.text)[0]
-        except:
-            pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
-        if re.search('[\\\ \ \* \? \" \ \< \> \| ,]', pic_url) != None:
-            pic_url = re.sub('[\\\ \ \* \? \" \ \< \> \| ,]', '', pic_url)
-
-        return [likes, pic_url, ill_name_raw, page_count]
-    else:
+    if res ==None:
         return None
+    likes = int(re.findall(r'"total_view":(.+?),', res.text)[0])
+    ill_name_raw = repr(re.findall(r'"title":"(.+?)"', res.text)[0])
+    page_count = int(re.findall(r'"page_count":(.+?),', res.text)[0])
+    ill_name_raw = ill_name_raw.encode().decode('unicode_escape')
+    ill_name_raw = ill_name_raw.replace("'", '')
+    ill_name_raw = ill_name_raw.replace("\/", '')
+
+    try:
+        pic_url = re.findall(r'"original_image_url":"(.+?)"', res.text)[0]
+    except:
+        pic_url = re.findall(r'"original":"(.+?)"', res.text)[0]
+    if re.search('[\\\ \ \* \? \" \ \< \> \| ,]', pic_url) != None:
+        pic_url = re.sub('[\\\ \ \* \? \" \ \< \> \| ,]', '', pic_url)
+
+    return [likes, pic_url, ill_name_raw, page_count]
 
 
 def Choser():
@@ -381,7 +372,7 @@ def Choser():
             elif n == 4:
                 name = input("you pixiv id->>")
                 UserLiked(name)
-            elif n == 6:
+            elif n == 5:
                 illustrator_id = input("type illustrator id there->")
                 illustrator_mode(illustrator_id)
             else:
@@ -398,7 +389,7 @@ def illustrator_mode(id):
     user_detail = "%s/v1/user/detail" % api_main
     global save_path
     global thd
-    save_path = save_path + f"./user_{id}"
+    save_path = save_path + f"/user_{id}"
     if os.path.exists(save_path) == True:
         pass
     else:
@@ -415,11 +406,22 @@ def illustrator_mode(id):
     }
     user_detaill = master_request(method="GET", url=user_detail, is_token=True, parameters=params_user)
     user_total_ill = re.findall(r'"total_illusts":(.+?),', user_detaill.text)[0]
-    user_detaill = int(user_total_ill) // 30
+    print(user_total_ill)
+    remainder = int(user_total_ill) % 30
+    if int(user_total_ill) % 30 !=0 and int(user_total_ill)//30>0:
+        user_detaill = int(user_total_ill)//30 +1
+    else:
+        user_detaill=1
     for i in range(user_detaill):
-        params["offset"] = i * 30
+        print(f"total pages:{user_detaill}, finished{i}")
         resc = master_request(method="GET", url=user_ill, is_token=True, parameters=params)
+        if i == user_detaill-1:
+            params["offset"] = params["offset"] + remainder
+        else:
+            params["offset"] = params["offset"] + 30
         start_Thead(raw_processer(resc.text), thd)
+        time.sleep(2)
+
 
 
 def ranking():
@@ -457,11 +459,12 @@ def master_request(method: str, url: str, is_token: bool | True, header: dict | 
         if method == "GET":
             if is_token:
                 res = requests.get(url=url, params=parameters, headers=acc_t.get_access_token(), stream=True, timeout=1)
+
                 if res.status_code in {200, 301, 302}:
                     return res
                 else:
                     if retry>0:
-                        print("retry")
+                        print("retrying")
                         acc_t.update_token()
                         return master_request(method=method, url=url, is_token=is_token, header=header,
                                               parameters=parameters, data=data,retry=retry-1)
@@ -471,7 +474,7 @@ def master_request(method: str, url: str, is_token: bool | True, header: dict | 
                     return res
                 else:
                     if retry>0:
-                        print("retry")
+                        print("retrying")
                         acc_t.update_token()
                         return master_request(method=method, url=url, is_token=False, header=header, parameters=parameters,
                                               data=data,retry=retry-1)
@@ -482,7 +485,7 @@ def master_request(method: str, url: str, is_token: bool | True, header: dict | 
                 print("error： ", e)
                 return requests.post(url=url, headers=header, params=parameters, data=data, timeout=1)
     except:
-        print(f"exception occor retrying :{retry}")
+        print(f"[bold red ]exception occor retrying :{retry}")
         if retry>0:
             return master_request(method=method, url=url, is_token=is_token, header=header,parameters=parameters, data=data,retry=retry-1)
         print(f"fail request")
@@ -590,4 +593,7 @@ class token():
 
 
 if __name__ == "__main__":
+    #print(getpictures("./pixiv/wanderer"))
+    #print(search(name="wanderer",offset=0,search_mode="exact_match_for_tags"))
+    #print(ill_detail(54395645))
     Choser()
