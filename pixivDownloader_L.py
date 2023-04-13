@@ -195,12 +195,12 @@ def NormalS():
             if i > start and i <= end:
                 start_Thead(id, thd)
                 time.sleep(10)
-            print(f"[bold green ]finsihed the page:{i}!!!")
+            print(f"[bold green ]finsihed the page:{i}")
         elif mode == 3:
             print(f"start downloading page:{i}[bold yellow]")
             id = getpageids(sname=name, page=i, total=1, mode=mode_search)
             start_Thead(id, thd)
-            print(f"[bold green ]finsihed the page:{i}!!!")
+            print(f"[bold green ]finsihed the page:{i}")
             time.sleep(10)
         i += 1
 
