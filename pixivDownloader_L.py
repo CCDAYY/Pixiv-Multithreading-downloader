@@ -88,7 +88,6 @@ def download(id):
             url = url_
             pic_url = (local_save_path + '/%s%d%s%s') % (pic_name, i + 1, '_' + str(id), extension)
             pic_url = re.sub('[\\\ |"<>!*?]', '', pic_url)
-            print(f'[bold yellow] {pic_url}')
             # useing the api to get picture by url
             files = getpictures(save_path)
             if not pic_url in files:
