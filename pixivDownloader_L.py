@@ -184,7 +184,7 @@ def NormalS():
                     i = total + 1
                 print(f"start downloading page:{i}[bold yellow]")
                 start_Thead(id, thd)
-                print(f"[bold green ]finsihed the page:{i}!!!")
+                print(f"[bold green ]finsihed the page:{i}")
                 time.sleep(10)
             if i > tpage:
                 i = total + 1
