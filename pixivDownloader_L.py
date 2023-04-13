@@ -50,17 +50,20 @@ head = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36',
     'referer': 'https://www.google.com/',
 }
-save_path = "./pixiv"
-if os.path.exists(save_path):
-    pass
-else:
-    os.mkdir(save_path)
 
 lines_variable = []  # the rich.progress objects
 fail_id = []
 filter_likes = None
 thd = 4
 illustration_pool = []
+
+def creat_dir(path):
+    if os.path.exists(path) == True:
+        pass
+    else:
+        os.mkdir(path)
+save_path = "./pixiv"
+creat_dir(save_path)
 
 def getpictures(path):
     files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.png') or f.endswith('.jpg')]
@@ -169,10 +172,8 @@ def NormalS():
         mode = 3
     ## create file
     save_path = save_path + '/' + name
-    if os.path.exists(save_path) == True:
-        pass
-    else:
-        os.mkdir(save_path)
+    save_path = re.sub('[\\\ |"<>!*?]', '', save_path)
+    creat_dir(save_path)
     i = 1
     while i <= total:
 
@@ -211,11 +212,7 @@ def changer():
     page = 1
     n_Num = sname + str(likes)
     save_path = save_path + "/" + n_Num
-    if os.path.exists(save_path) == True:
-        pass
-    else:
-        os.mkdir(save_path)
-
+    creat_dir(save_path)
     url = 'https://www.pixiv.net/ajax/search/artworks/{}%20{}%E5%85%A5%E3%82%8A?word={}%20{}%E5%85%A5%E3%82%8A&order=date_d&mode=all&p={}&s_mode=s_tag&type=all&lang=zh'.format(
         sname, likes, sname, likes, page)
     page = getTotalPage(url)
@@ -320,9 +317,11 @@ def search(name: str, search_mode: str, offset: str | int | bool, duration: str 
         "start_date": None,
         "end_date": None,
     }
-    res = master_request(method="GET", url=url, is_token=True, parameters=param)
-    return raw_processer(res.text)
-
+    try:
+        res = master_request(method="GET", url=url, is_token=True, parameters=param)
+        return raw_processer(res.text)
+    except:
+        return []
 
 def ill_detail(id: object) -> object:
     # return an array contain total_view & pic_url
@@ -390,10 +389,7 @@ def illustrator_mode(id):
     global save_path
     global thd
     save_path = save_path + f"/user_{id}"
-    if os.path.exists(save_path) == True:
-        pass
-    else:
-        os.mkdir(save_path)
+    creat_dir(save_path)
     print(save_path)
     params_user = {
         "user_id": id,
@@ -443,17 +439,14 @@ def ranking():
         print("using default mode -> day")
         param["mode"] = "day"
     save_path = save_path + str(f"/{types[choose]}%s") % (day)
-    if os.path.exists(save_path) == True:
-        pass
-    else:
-        os.mkdir(save_path)
+    creat_dir(save_path)
     r = master_request(method="GET", url=type_Rank_url, parameters=param, is_token=True)
     id = raw_processer(r.text)
     start_Thead(id, thd)
 
 
 def master_request(method: str, url: str, is_token: bool | True, header: dict | None = None,
-                   parameters: dict | str | None = None, data: dict | None = None, retry:int|None=3):
+                   parameters: dict | str | None = None, data: dict | None = None, retry:int|None=6):
     acc_t = token()
     try:
         if method == "GET":
@@ -464,7 +457,8 @@ def master_request(method: str, url: str, is_token: bool | True, header: dict | 
                     return res
                 else:
                     if retry>0:
-                        print("retrying")
+                        print("retrying：",retry)
+                        time.sleep(random.randint(1,3))
                         acc_t.update_token()
                         return master_request(method=method, url=url, is_token=is_token, header=header,
                                               parameters=parameters, data=data,retry=retry-1)
@@ -474,7 +468,8 @@ def master_request(method: str, url: str, is_token: bool | True, header: dict | 
                     return res
                 else:
                     if retry>0:
-                        print("retrying")
+                        print("retrying：",retry)
+                        time.sleep(random.randint(1, 3))
                         acc_t.update_token()
                         return master_request(method=method, url=url, is_token=False, header=header, parameters=parameters,
                                               data=data,retry=retry-1)
